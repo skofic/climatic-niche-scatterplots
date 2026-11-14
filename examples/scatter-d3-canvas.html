@@ -20,7 +20,7 @@
      the pane state (data-key = the term's gid), whose values are the gids of the enumeration elements. The data comes
      from the panes' Foxx service (service.js), the texts from the dictionary service (dictionary.js). -->
 <!-- the legend row first, on both panes: the marks ("i" status, "?" hints, reset view, the hourglass while waiting), then the chips (Milko, 2026-11-12) -->
-<div class="legend"><span class="info" id="status">i</span><span class="help" id="help">?</span><span class="reset" id="reset" tabindex="0">↺</span><span class="wait">⏳</span><span id="legend"></span></div>
+<div class="legend"><span class="info" id="status">i</span><span class="help" id="help">?</span><span class="reset" id="reset" tabindex="0">↺</span><span class="gear" id="settings" tabindex="0">⚙</span><span class="wait">⏳</span><span id="legend"></span></div>
 <div class="toolbar">
   <strong class="pane-title" data-term="ui_layout_scatterplot"></strong>
   <span class="group"><span class="cap" data-term="env_climate"></span>
@@ -38,7 +38,7 @@
     <label><span data-term="ui_layout_scatterplot_view_classes_position"></span> <select data-key="ui_layout_scatterplot_view_classes_position"></select></label>
     <label><span data-term="ui_layout_scatterplot_view_classes_bin"></span> <select data-key="ui_layout_scatterplot_view_classes_bin"></select> ≥ <select data-key="ui_layout_scatterplot_view_classes_bin_min"><option>10</option><option>30</option><option>100</option><option>300</option></select></label>
   </span>
-  <span class="group"><button id="settings" class="toggle" data-term="ui_layout_scatterplot_layer"></button></span>
+  <span class="group"><span class="cap" data-term="ui_layout_scatterplot_cursor"></span><label><input type="checkbox" data-key="ui_layout_scatterplot_cursor"> <span id="cursorInfo" class="hints"></span></label></span>
 </div>
 <!-- the drawing settings: one group per layer, then the settings shared by the layers; a group never breaks across rows -->
 <div class="toolbar collapsible">
@@ -75,7 +75,6 @@
     <span id="selCount">0</span> <select data-key="ui_layout_units_mode"></select> <button id="selClear" data-term="ui_layout_label_clear"></button>
   </span>
   <span class="group" id="mapSel" style="display:none"><span class="cap" data-term="ui_layout_scatterplot_label_map-selection" data-info="ui_layout_map_selection"></span><span id="mapSelInfo"></span> <button id="mapSelClear" data-term="ui_layout_label_clear"></button></span>
-  <span class="group"><span class="cap" data-term="ui_layout_scatterplot_cursor"></span><label><input type="checkbox" data-key="ui_layout_scatterplot_cursor"> <span id="cursorInfo" class="hints"></span></label></span>
 </div>
 <div id="wrap"><canvas id="c"></canvas><canvas id="over"></canvas><svg id="s"></svg><div id="tip" class="tip"></div><div id="disabled"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -186,13 +185,15 @@ async function refresh() {
   $('basePosCtl').style.display = !c.present && !classView() ? '' : 'none'
   classes = ''
   if (classView() && sp) { const r = await Svc.classes(sp, state, state[K.variant]); classes = r ? r.cells : '' }
+  const LAYER_TERM = { base: 'ui_layout_scatterplot_base', species: 'ui_layout_scatterplot_species', units: 'ui_layout_scatterplot_units' }   // a legend switch shows its layer's card
   const T = Dict.title   // legend chips: a swatch and the term's title; the three layers' chips toggle the layer
-  const chip = (v, text, tog) => `<span${tog ? ` class="tog${layerOff(tog) ? ' off' : ''}${tog === 'species' && !sp ? ' na' : ''}" data-toggle="${tog}" title="${T('ui_layout_scatterplot_layer')}"` : ''}><span class="sw" style="${v.startsWith('--') ? `background:var(${v})` : v}"></span>${text}</span>`
+  const chip = (v, text, tog) => `<span${tog ? ` class="tog${layerOff(tog) ? ' off' : ''}${tog === 'species' && !sp ? ' na' : ''}" data-toggle="${tog}" data-info="${LAYER_TERM[tog]}"` : ''}><span class="sw" style="${v.startsWith('--') ? `background:var(${v})` : v}"></span>${text}</span>`
   $('legend').innerHTML = (classView()
     ? `${chip('--base', T(LBL.base), 'base')}${chip('--stable', T(LEGEND[1]))}${chip('--lost', T(LEGEND[2]))}${chip('--new', T(LEGEND[3]))}${chip('--unit', T(LBL.unitsPresent), 'units')}${chip('--future', T(LBL.unitsFuture))}${chip('--map', T(LBL.mapSel))}<span class="note">· ${T(LBL.binArrows)}</span>`
     : `${chip('--base', T(LBL.base) + (c.present ? '' : ` (${T(state[K.basePos]).toLowerCase()})`), 'base')}${chip('--species', T(LBL.species) + (c.present ? '' : ` (${T(LBL.unitsPresent).split(',').pop().trim()})`), 'species')}${chip('--unit', T(LBL.unitsPresent), 'units')}${chip('--future', T(LBL.unitsFuture))}${chip('--map', T(LBL.mapSel))}${chip('border:1.5px dashed var(--flag);background:none;width:8px;height:8px', T(LBL.flagged))}`)
     + (c.present ? '' : `<span class="note">· ${T(LBL.projection)}: ${T(LBL.unitsFuture)}, ${T(LBL.mapSel)}</span>`)
   for (const el of $('legend').querySelectorAll('.tog')) el.addEventListener('click', () => { if (el.classList.contains('na')) return; toggleLayer(el.dataset.toggle); remember() })
+  Info.init($('legend'))
   fillClimate(); refill(); syncControls()
   if (state[K.mapSel]) await selectFromMap(state[K.mapSel], { quiet: true })
   draw()
@@ -512,7 +513,8 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   if (state[K.zoom]) zoomTo(state[K.zoom])
   $('mapSelClear').addEventListener('click', () => { selectFromMap(null); post({ [K.mapSel]: null }) })   // the host clears the map too
   $('reset').addEventListener('click', resetView); $('reset').title = Dict.title('ui_layout_label_reset')
-  $('settings').addEventListener('click', () => document.body.classList.toggle('settings'))
+  $('settings').addEventListener('click', () => document.body.classList.toggle('settings')); $('settings').title = Dict.title('ui_layout_scatterplot_layer')
+  Info.records(document.querySelector('[data-term=ui_layout_label_source]'), $('product'), () => cat.datasets.map((d) => ({ key: d[K.dataset], title: d.title, info: d.info })))
   Pop.bind(status); Pop.bind($('help')); Pop.set($('help'), Dict.title('ui_layout_scatterplot_label_hints'), Dict.def('ui_layout_scatterplot_label_hints'))
   $('selClear').addEventListener('click', () => { state[K.selection] = []; $('selCount').textContent = 0; draw(); post({ [K.selection]: [] }) })
   new ResizeObserver(() => { size(); draw() }).observe(wrap)

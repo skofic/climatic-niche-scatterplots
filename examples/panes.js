@@ -14,7 +14,7 @@ window.Pop = (() => {
   const html = (text) => String(text ?? '').split(' · ').map((s) => `<div>${s.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</div>`).join('')
   function show(mark) {
     const rich = mark._card ? mark._card() : null, text = mark.dataset.text; if (!rich && !text) return
-    const b = el(); b.innerHTML = rich ?? (mark.dataset.head ? `<div class="head">${mark.dataset.head}</div>` : '') + html(text); b.classList.toggle('card', !!rich); b.classList.add('open'); owner = mark; b.scrollTop = 0
+    const b = el(); b.innerHTML = rich ?? (mark.dataset.head ? `<div class="head">${mark.dataset.head}</div>` : '') + html(text); b.classList.toggle('card', !!rich); b.classList.toggle('shade', !!mark.closest('.na')); b.classList.add('open'); owner = mark; b.scrollTop = 0
     const r = mark.getBoundingClientRect(), w = b.offsetWidth
     b.style.top = `${r.bottom + 6 + scrollY}px`; b.style.left = `${Math.max(6, Math.min(r.left + scrollX, innerWidth - w - 6))}px`
   }
@@ -54,7 +54,9 @@ window.Pop = (() => {
     target.addEventListener('mouseenter', () => { clearTimeout(timer); clearTimeout(wait); wait = setTimeout(() => { if (!pinned) show(target) }, delay) })
     target.addEventListener('mouseleave', () => { clearTimeout(wait); timer = setTimeout(hide, 200) })
   }
-  return { bind, set, show, hide, shortLabels, card }
+  /** draw the open popover again when it belongs to this element (its content was completed) */
+  const again = (target) => { if (owner === target) show(target) }
+  return { bind, set, show, hide, shortLabels, card, again }
 })()
 
 /* Info: what the dictionary says of a control beyond its label. Every element labelled by a term (data-term) gets a
@@ -71,18 +73,40 @@ window.Info = (() => {
   // every link to the dictionary site goes to ONE tab, named: the first click opens it, the next ones show their term
   // there (Milko, 2026-11-14); any other link opens a tab of its own
   const TERM = 'target="dictionary"', OUT = 'target="_blank" rel="noopener"'
+  // a link to a term must never show the term's identifier (Milko, 2026-11-14): when the visible text is the bare
+  // identifier, the term's title stands for it. Titles not fetched yet are fetched and the card is drawn again.
+  let want = new Set()
+  const linkText = (txt, g) => { const bare = txt.replace(/^`|`$/g, ''); if (bare !== g) return txt; if (Dict.terms.has(g)) return Dict.terms.get(g) ? esc(Dict.title(g)) : txt; want.add(g); return '…' }
   /** the dictionary's Markdown, as far as its texts use it: paragraphs, bold, italics, code, links (a `gid.md` link is a term page) */
   const md = (t) => esc(t).split(/\n{2,}/).map((p) => '<p>' + p
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => /^https?:/.test(url) ? `<a ${OUT} href="${url}">${txt}</a>` : `<a ${TERM} href="${href(url.replace(/\.md$/, ''))}">${txt}</a>`)
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => { if (/^https?:/.test(url)) return `<a ${OUT} href="${url}">${txt}</a>`; const g = url.replace(/\.md$/, ''); return `<a ${TERM} href="${href(g)}">${linkText(txt, g)}</a>` })
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, ' ') + '</p>').join('')
   const has = (g, f) => !!(g && Dict.info(g, f))
   const rich = (g) => g && ['_description', ...SECT].some((f) => has(g, f))
+  const sect = (f, body) => `<div class="sect${f === '_issues' ? ' issues' : ''}"><div class="sub">${f === '_issues' ? '⚠ ' : ''}${esc(Dict.title(f))}</div>${body}</div>`
   /** one term's part of a card: head (the title, linked to the term page), definition, description, the three sections */
   function part(g, only) {
     let out = `<div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>`
     if (!only) { const d = Dict.info(g, '_definition'); if (d) out += `<p class="def">${esc(d)}</p>`; if (has(g, '_description')) out += md(Dict.info(g, '_description')) }
-    for (const f of only || SECT) if (has(g, f)) out += `<div class="sect${f === '_issues' ? ' issues' : ''}"><div class="sub">${f === '_issues' ? '⚠ ' : ''}${esc(Dict.title(f))}</div>${md(Dict.info(g, f))}</div>`
+    for (const f of only || SECT) if (has(g, f)) out += sect(f, md(Dict.info(g, f)))
     return `<div class="term">${out}</div>`
+  }
+  /** the same part for an object that is not a term but follows the dictionary (a dataset record: title + `_info` texts
+   *  already in the pane's language + `_references`), as the service's catalogue returns it */
+  function record(title, info = {}, only) {
+    let out = `<div class="head">${esc(title)}</div>`
+    if (!only && info._description) out += md(info._description)
+    for (const f of only || SECT) if (info[f]) out += sect(f, md(info[f]))
+    const R = info._references
+    if (!only && R && (R._citation || R._url)) out += sect('_references', [...(R._citation || []), ...(R._url || [])].map(md).join(''))
+    return `<div class="term">${out}</div>`
+  }
+  /** a selector's options, each with its definition, so that an option can be read without being chosen; only for
+   *  short lists whose options are all terms */
+  function options(sel) {
+    const os = sel ? [...sel.options] : []
+    if (os.length < 2 || os.length > 12 || !os.every((o) => o.value && Dict.terms.get(o.value))) return ''
+    return `<div class="term opts">${os.map((o) => `<p${o.selected ? ' class="on"' : ''}><b>${esc(Dict.title(o.value))}</b>${Dict.info(o.value, '_definition') ? ' · ' + esc(Dict.info(o.value, '_definition')) : ''}</p>`).join('')}</div>`
   }
   /** the terms behind a selector's choice: the chosen option and, when it belongs to another namespace than the field's own (a source's periods), that section */
   function chosen(sel) {
@@ -92,40 +116,65 @@ window.Info = (() => {
   }
   const selectOf = (e) => (e.closest('label') || (e.classList.contains('cap') ? e.parentElement : null))?.querySelector(e.classList.contains('cap') ? ':scope > select[data-key]' : 'select[data-key]')
   const warn = () => Object.assign(document.createElement('span'), { className: 'warn', textContent: '⚠', tabIndex: 0 })
-  const targets = []
+  /** build a card; when it named terms whose titles were missing, fetch them and draw the card again */
+  const build = (target, fn) => { want = new Set(); const html = fn(); if (want.size) { const gs = [...want]; Dict.load(gs).then(() => Pop.again(target)) } return html }
+  let targets = []
   async function init(root = document) {
-    const els = [...root.querySelectorAll('[data-term]')].filter((e) => !e._info)
-    await Dict.load([...SECT, ...els.flatMap((e) => (e.dataset.info || '').split(' '))])
+    const els = [...root.querySelectorAll('[data-term], [data-info]')].filter((e) => !e._info)
+    await Dict.load([...SECT, '_references', ...els.flatMap((e) => (e.dataset.info || '').split(' '))])
     for (const e of els) {
       e._info = true
-      // data-info names further terms the element stands for: a label term whose subject is a state property set by a
-      // gesture (the map selection has no control of its own, its caption and the draw selector speak for it)
-      const gs0 = [e.dataset.term, ...(e.dataset.info || '').split(' ').filter(Boolean)], sel = selectOf(e)
-      Pop.card(e, () => { const gs = [...new Set([...gs0, ...chosen(sel)])].filter(rich); if (!gs.length) return null; e.removeAttribute('title'); return gs.map((x) => part(x)).join('') })
+      // a label inside an element that speaks for other terms (a legend label inside its switch) has no hover of its own
+      if (e.parentElement && e.parentElement.closest('[data-info]')) { e.removeAttribute('title'); continue }
+      // data-info names further terms the element stands for: a label whose subject is a state property set by a gesture
+      // (the map selection), or a legend label, which shows the card of the layer it switches (the check box's term)
+      const gs0 = [e.dataset.term, ...(e.dataset.info || '').split(' ')].filter(Boolean), sel = selectOf(e)
+      Pop.card(e, () => build(e, () => {
+        const gs = [...new Set([...gs0, ...chosen(sel)])].filter(rich), extra = e._extra ? e._extra() : '', opts = options(sel)
+        if (!gs.length && !extra && !opts) return null
+        e.removeAttribute('title')
+        const first = gs0.filter(rich).map((x) => part(x)).join(''), rest = gs.filter((x) => !gs0.includes(x)).map((x) => part(x)).join('')
+        return first + opts + rest + extra
+      }))
       targets.push({ e, gs: gs0, sel, mark: null, selMark: null })
     }
     await refresh()
   }
+  /** a selector whose options are records, not terms (the climate source): the label's card lists every record and
+   *  opens the chosen one; the selector gets the warning mark when the chosen record has issues.
+   *  records() → [{ key, title, info }], sel.value is the chosen key */
+  function records(label, sel, records) {
+    const cur = () => records().find((r) => String(r.key) === sel.value)
+    label._extra = () => records().map((r) => String(r.key) === sel.value ? record(r.title, r.info) : `<div class="term opts"><p><b>${esc(r.title)}</b></p></div>`).join('')
+    const mark = warn(); sel.after(mark); mark._card = () => { const r = cur(); return r && r.info && r.info._issues ? build(mark, () => record(r.title, r.info, ['_issues'])) : null }; Pop.bind(mark)
+    const sync = () => { const r = cur(); mark.hidden = !(r && r.info && r.info._issues) }
+    sel.addEventListener('change', sync); recordSyncs.push(sync); sync()
+  }
+  const recordSyncs = []
   let pending = null
   /** show or hide the warning marks; the sections of the chosen options are fetched on first need */
   function refresh() {
     clearTimeout(pending)
     return new Promise((done) => { pending = setTimeout(async () => {
+      targets = targets.filter((t) => t.e.isConnected)
       const nids = targets.map((t) => t.sel && Dict.terms.get(t.sel.value)?._code?._nid).filter((n) => n && !Dict.terms.has(n))
       if (nids.length) await Dict.load(nids)
       for (const t of targets) {
-        if (t.gs.some((x) => has(x, '_issues'))) { if (!t.mark) { t.mark = warn(); if (t.e.classList.contains('cap')) t.e.append(t.mark); else t.e.after(t.mark);   // inside a caption: the settings grid gives every child of a group a column
-          t.mark._card = () => t.gs.filter((x) => has(x, '_issues')).map((x) => part(x, ['_issues'])).join(''); Pop.bind(t.mark) } }
+        if (t.e.classList.contains('tog')) continue   // a legend switch: the card is enough, the mark is at the check box
+        if (t.gs.some((x) => has(x, '_issues'))) { if (!t.mark) {
+          t.mark = warn(); if (t.e.classList.contains('cap')) t.e.append(t.mark); else t.e.after(t.mark);   // inside a caption: the settings grid gives every child of a group a column
+          t.mark._card = () => build(t.mark, () => t.gs.filter((x) => has(x, '_issues')).map((x) => part(x, ['_issues'])).join('')); Pop.bind(t.mark) } }
         if (t.sel) {
           const gs = chosen(t.sel).filter((x) => has(x, '_issues'))
-          if (gs.length && !t.selMark) { t.selMark = warn(); t.sel.after(t.selMark); t.selMark._card = () => chosen(t.sel).filter((x) => has(x, '_issues')).map((x) => part(x, ['_issues'])).join('') || null; Pop.bind(t.selMark) }
+          if (gs.length && !t.selMark) { t.selMark = warn(); t.sel.after(t.selMark); t.selMark._card = () => build(t.selMark, () => chosen(t.sel).filter((x) => has(x, '_issues')).map((x) => part(x, ['_issues'])).join('') || null); Pop.bind(t.selMark) }
           if (t.selMark) t.selMark.hidden = !gs.length
         }
       }
+      for (const f of recordSyncs) f()
       done()
     }, 60) })
   }
-  return { init, refresh, SITE }
+  return { init, refresh, records, SITE }
 })()
 
 /* Wait: the activity monitor. service.js reports its pending requests here; the page's body gets the "busy" class while

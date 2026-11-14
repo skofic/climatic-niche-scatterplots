@@ -392,3 +392,22 @@ service), cards on the legend entries.
   switches while no species is chosen; their settings are kept.
 - Vocabulary (Milko): **clear hover** = the reading card that can be pinned and carries links;
   **dark hover** = the browser's plain tooltip, a hint.
+
+### Iteration 20 (2026-11-14): the hover system and layout A (Milko's review, decided the same day)
+
+- **Clear hovers.** A selector's card lists every option with its definition (the chosen one marked), so an
+  option can be read without being chosen; then the chosen option's own texts. A legend switch shows the
+  card of the layer it switches, the same term as its check box (`data-info`), greyed when the layer needs
+  a species and none is chosen. The **Source** label's card comes from the dataset records: the service's
+  catalogue now returns each source's description, uses, methods, issues and references
+  (`indicator-pair-scatterplots-service` `e84e159`), and the selector gets a warning mark when the chosen
+  source has issues. A link whose visible text is a bare identifier shows the term's title instead.
+- **Layout A.** The layers section is opened by a gear mark in the legend row, at the same place on both
+  panes; the two buttons and their row are gone. Order of rows on both panes: legend, data, layers. The
+  scatterplot's Cursor moved into the data row; the common bar's layout selector has a label.
+- **Waiting for `metadata-store`** ([`2026-11-14-handoff-metadata-store-review-texts.md`](2026-11-14-handoff-metadata-store-review-texts.md)):
+  the new titles (Restriction level, Plot layers, X / Y indicator, Panes, Map), the Search text, five caption
+  terms (Coordinates privacy, Layout, Axes, Atlas, EU-Trees4F), fuller scenario texts, titles as link texts.
+  Until then "X · Y", "Atlas" and "EU-Trees4F" stay hard-coded and the Layout section has no caption.
+- Found: our own dataset records' descriptions are written for developers (collection paths, scalings);
+  they now show in the Source card and need a reader's wording (ours, with the sources panel).
