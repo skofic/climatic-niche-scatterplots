@@ -411,3 +411,13 @@ service), cards on the legend entries.
   Until then "X · Y", "Atlas" and "EU-Trees4F" stay hard-coded and the Layout section has no caption.
 - Found: our own dataset records' descriptions are written for developers (collection paths, scalings);
   they now show in the Source card and need a reader's wording (ours, with the sources panel).
+
+### Iteration 21 (2026-11-14): one drawing for every selector's card (Milko chose example B)
+
+A selector's clear hover is: the field (title, definition, description), then its options as blocks in the
+selector's order. The chosen option is opened: a filled dot, an accent bar, its title large and bold, all it
+says, its sections indented under small grey capitals, its references. The others are quiet: an empty dot,
+the title and one line, in grey. Three levels never share a style: the card's subject, an option's title, a
+section's title. The Source card (dataset records) uses the same blocks; an unchosen source shows the
+opening sentence of its description until the records have definitions. The new caption terms and titles
+from `metadata-store` (`097d373`) are in use; term cards end with the term's references.

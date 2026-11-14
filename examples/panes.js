@@ -84,31 +84,38 @@ window.Info = (() => {
   const has = (g, f) => !!(g && Dict.info(g, f))
   const rich = (g) => g && (['_description', ...SECT].some((f) => has(g, f)) || !!Dict.terms.get(g)?._info?._references)
   const sect = (f, body) => `<div class="sect${f === '_issues' ? ' issues' : ''}"><div class="sub">${f === '_issues' ? '⚠ ' : ''}${esc(Dict.title(f))}</div>${body}</div>`
-  /** one term's part of a card: head (the title, linked to the term page), definition, description, the three sections */
-  function part(g, only) {
-    let out = `<div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>`
+  const refs = (R) => R && (R._citation || R._url) ? sect('_references', [...(R._citation || []), ...(R._url || [])].map(md).join('')) : ''
+  /** what a term says: definition, description, the three sections, references (only: just the named sections) */
+  function body(g, only) {
+    let out = ''
     if (!only) { const d = Dict.info(g, '_definition'); if (d) out += `<p class="def">${esc(d)}</p>`; if (has(g, '_description')) out += md(Dict.info(g, '_description')) }
     for (const f of only || SECT) if (has(g, f)) out += sect(f, md(Dict.info(g, f)))
-    const R = Dict.terms.get(g)?._info?._references   // what to cite and where it comes from
-    if (!only && R && (R._citation || R._url)) out += sect('_references', [...(R._citation || []), ...(R._url || [])].map(md).join(''))
-    return `<div class="term">${out}</div>`
+    if (!only) out += refs(Dict.terms.get(g)?._info?._references)
+    return out
   }
-  /** the same part for an object that is not a term but follows the dictionary (a dataset record: title + `_info` texts
-   *  already in the pane's language + `_references`), as the service's catalogue returns it */
-  function record(title, info = {}, only) {
-    let out = `<div class="head">${esc(title)}</div>`
+  /** one term's part of a card: the head (its title, linked to the term page), then what it says */
+  const part = (g, only) => `<div class="term"><div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>${body(g, only)}</div>`
+  /** the same for an object that is not a term but follows the dictionary (a dataset record: `_info` texts already in
+   *  the pane's language + `_references`), as the service's catalogue returns it */
+  function recordBody(info = {}, only) {
+    let out = ''
     if (!only && info._description) out += md(info._description)
     for (const f of only || SECT) if (info[f]) out += sect(f, md(info[f]))
-    const R = info._references
-    if (!only && R && (R._citation || R._url)) out += sect('_references', [...(R._citation || []), ...(R._url || [])].map(md).join(''))
-    return `<div class="term">${out}</div>`
+    if (!only) out += refs(info._references)
+    return out
   }
-  /** a selector's options, each with its definition, so that an option can be read without being chosen; only for
-   *  short lists whose options are all terms */
+  /** A selector's options as blocks, in the selector's order (Milko, 2026-11-14): the chosen one is opened — a filled
+   *  dot, an accent bar, its title large, everything it says; the others are quiet — an empty dot, the title, one line.
+   *  Three levels never share a style: option titles, section titles (small capitals), unchosen options (grey). */
+  const block = (on, title, link, open, line) => on
+    ? `<div class="opt on"><div class="otitle">● ${link ? `<a ${TERM} href="${link}">${esc(title)}</a>` : esc(title)}</div>${open}</div>`
+    : `<div class="opt"><div class="otitle">○ ${esc(title)}</div>${line ? `<p>${esc(line)}</p>` : ''}</div>`
+  const first = (text) => Dict.plain(text || '').split(/(?<=[.:;])\s/)[0]   // an object without a definition: the opening sentence of its description
+  /** only short lists whose options are all terms are listed (never the species, the countries or the units) */
   function options(sel) {
     const os = sel ? [...sel.options] : []
     if (os.length < 2 || os.length > 12 || !os.every((o) => o.value && Dict.terms.get(o.value))) return ''
-    return `<div class="term opts">${os.map((o) => `<p${o.selected ? ' class="on"' : ''}><b>${esc(Dict.title(o.value))}</b>${Dict.info(o.value, '_definition') ? ' · ' + esc(Dict.info(o.value, '_definition')) : ''}</p>`).join('')}</div>`
+    return `<div class="opts">${os.map((o) => block(o.selected, Dict.title(o.value), href(o.value), body(o.value), Dict.info(o.value, '_definition'))).join('')}</div>`
   }
   /** the terms behind a selector's choice: the chosen option and, when it belongs to another namespace than the field's own (a source's periods), that section */
   function chosen(sel) {
@@ -135,8 +142,10 @@ window.Info = (() => {
         const gs = [...new Set([...gs0, ...chosen(sel)])].filter(rich), extra = e._extra ? e._extra() : '', opts = options(sel)
         if (!gs.length && !extra && !opts) return null
         e.removeAttribute('title')
-        const first = gs0.filter(rich).map((x) => part(x)).join(''), rest = gs.filter((x) => !gs0.includes(x)).map((x) => part(x)).join('')
-        return first + opts + rest + extra
+        // the field (with options it always opens the card, were it only with its definition), then its options (the
+        // chosen one opened), then the section the chosen option belongs to
+        const field = gs0.filter((x) => rich(x) || ((opts || extra) && has(x, '_definition'))).map((x) => part(x)).join(''), rest = gs.filter((x) => !gs0.includes(x) && !(opts && sel && x === sel.value)).map((x) => part(x)).join('')
+        return field + opts + rest + extra
       }))
       targets.push({ e, gs: gs0, sel, mark: null, selMark: null })
     }
@@ -147,8 +156,8 @@ window.Info = (() => {
    *  records() → [{ key, title, info }], sel.value is the chosen key */
   function records(label, sel, records) {
     const cur = () => records().find((r) => String(r.key) === sel.value)
-    label._extra = () => records().map((r) => String(r.key) === sel.value ? record(r.title, r.info) : `<div class="term opts"><p><b>${esc(r.title)}</b></p></div>`).join('')
-    const mark = warn(); sel.after(mark); mark._card = () => { const r = cur(); return r && r.info && r.info._issues ? build(mark, () => record(r.title, r.info, ['_issues'])) : null }; Pop.bind(mark)
+    label._extra = () => `<div class="opts">${records().map((r) => block(String(r.key) === sel.value, r.title, null, recordBody(r.info), first(r.info && r.info._description))).join('')}</div>`
+    const mark = warn(); sel.after(mark); mark._card = () => { const r = cur(); return r && r.info && r.info._issues ? build(mark, () => `<div class="term"><div class="head">${esc(r.title)}</div>${recordBody(r.info, ['_issues'])}</div>`) : null }; Pop.bind(mark)
     const sync = () => { const r = cur(); mark.hidden = !(r && r.info && r.info._issues) }
     sel.addEventListener('change', sync); recordSyncs.push(sync); sync()
   }
