@@ -380,3 +380,15 @@ Built for Milko's review, after the `_info` fields were loaded (`metadata-store`
 
 Not built yet: the examples as links, the "Sources and how to cite" panel (dataset records through our
 service), cards on the legend entries.
+
+### Iteration 19 (2026-11-14): first fixes from Milko's review of the term cards
+
+- The activity monitor dims the controls only when a wait lasts longer than 400 ms: a point drawn on the
+  map costs the scatterplot one short request (two in a future period), which used to flicker the pane.
+- Every link to a dictionary term goes to **one tab** (a named target): the first click opens it, the next
+  ones show their term there. Other links keep opening a tab of their own.
+- The warning mark stands farther from its label.
+- Legend switches of layers that need a species (the map's first five, the scatterplot's species) are not
+  switches while no species is chosen; their settings are kept.
+- Vocabulary (Milko): **clear hover** = the reading card that can be pinned and carries links;
+  **dark hover** = the browser's plain tooltip, a hint.

@@ -142,7 +142,7 @@ function resetView() {
 function applyLayers() {
   for (const [k, l] of Object.entries(basemaps)) l.setVisible(k === last(state[K.base]))
   for (const [id, l] of Object.entries(layers)) { l.setVisible(!!state[LAYER[id]] && !!l.getSource()); l.setOpacity((state[LAYER[id] + '_opacity'] ?? 100) / 100) }   // a raster layer without a source is never rendered
-  for (const el of document.querySelectorAll('.legend .tog')) el.classList.toggle('off', !state[el.dataset.toggle])   // the legend chips show and toggle the layers
+  for (const el of document.querySelectorAll('.legend .tog')) { el.classList.toggle('off', !state[el.dataset.toggle]); el.classList.toggle('na', !state[K.species] && el.dataset.toggle !== LAYER.units) }   // the legend chips show and toggle the layers
   if (typeof remember === 'function' && cat) remember()
 }
 
@@ -324,7 +324,7 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   await Dict.labels(); Pop.shortLabels(); bindControls(); syncControls(); applyLayers(); Info.init()
   await showSpeciesLayers(state[K.species])
   $('drawClear').addEventListener('click', () => { drawn.getSource().clear(); state[K.sel] = null; post({ [K.sel]: null }) })
-  for (const el of document.querySelectorAll('.legend .tog')) { el.title = Dict.def(el.dataset.toggle); el.addEventListener('click', () => { state[el.dataset.toggle] = !state[el.dataset.toggle]; syncControls(); applyLayers() }) }
+  for (const el of document.querySelectorAll('.legend .tog')) { el.title = Dict.def(el.dataset.toggle); el.addEventListener('click', () => { if (el.classList.contains('na')) return; state[el.dataset.toggle] = !state[el.dataset.toggle]; syncControls(); applyLayers() }) }   // without a species its layers do not exist: their chips are not switches, and keep their setting for when one is chosen
   $('settings').addEventListener('click', () => document.body.classList.toggle('settings')); Pop.bind($('status')); Pop.bind($('help')); Pop.set($('help'), Dict.title('ui_layout_map_label_hints'), Dict.def('ui_layout_map_label_hints'))
   $('reset').addEventListener('click', resetView); $('reset').title = Dict.title('ui_layout_label_reset')
   map.on('moveend', remember)

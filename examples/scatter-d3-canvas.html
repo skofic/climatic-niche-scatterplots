@@ -187,12 +187,12 @@ async function refresh() {
   classes = ''
   if (classView() && sp) { const r = await Svc.classes(sp, state, state[K.variant]); classes = r ? r.cells : '' }
   const T = Dict.title   // legend chips: a swatch and the term's title; the three layers' chips toggle the layer
-  const chip = (v, text, tog) => `<span${tog ? ` class="tog${layerOff(tog) ? ' off' : ''}" data-toggle="${tog}" title="${T('ui_layout_scatterplot_layer')}"` : ''}><span class="sw" style="${v.startsWith('--') ? `background:var(${v})` : v}"></span>${text}</span>`
+  const chip = (v, text, tog) => `<span${tog ? ` class="tog${layerOff(tog) ? ' off' : ''}${tog === 'species' && !sp ? ' na' : ''}" data-toggle="${tog}" title="${T('ui_layout_scatterplot_layer')}"` : ''}><span class="sw" style="${v.startsWith('--') ? `background:var(${v})` : v}"></span>${text}</span>`
   $('legend').innerHTML = (classView()
     ? `${chip('--base', T(LBL.base), 'base')}${chip('--stable', T(LEGEND[1]))}${chip('--lost', T(LEGEND[2]))}${chip('--new', T(LEGEND[3]))}${chip('--unit', T(LBL.unitsPresent), 'units')}${chip('--future', T(LBL.unitsFuture))}${chip('--map', T(LBL.mapSel))}<span class="note">· ${T(LBL.binArrows)}</span>`
     : `${chip('--base', T(LBL.base) + (c.present ? '' : ` (${T(state[K.basePos]).toLowerCase()})`), 'base')}${chip('--species', T(LBL.species) + (c.present ? '' : ` (${T(LBL.unitsPresent).split(',').pop().trim()})`), 'species')}${chip('--unit', T(LBL.unitsPresent), 'units')}${chip('--future', T(LBL.unitsFuture))}${chip('--map', T(LBL.mapSel))}${chip('border:1.5px dashed var(--flag);background:none;width:8px;height:8px', T(LBL.flagged))}`)
     + (c.present ? '' : `<span class="note">· ${T(LBL.projection)}: ${T(LBL.unitsFuture)}, ${T(LBL.mapSel)}</span>`)
-  for (const el of $('legend').querySelectorAll('.tog')) el.addEventListener('click', () => { toggleLayer(el.dataset.toggle); remember() })
+  for (const el of $('legend').querySelectorAll('.tog')) el.addEventListener('click', () => { if (el.classList.contains('na')) return; toggleLayer(el.dataset.toggle); remember() })
   fillClimate(); refill(); syncControls()
   if (state[K.mapSel]) await selectFromMap(state[K.mapSel], { quiet: true })
   draw()
@@ -204,7 +204,7 @@ const remembered = {}
 function toggleLayer(l) {
   if (l === 'units') { if (state[K.unitsOp] > 0) { remembered.units = state[K.unitsOp]; state[K.unitsOp] = 0 } else state[K.unitsOp] = remembered.units || 100 }
   else { const k = l === 'base' ? K.baseMode : K.speciesMode, none = OPT[k][2]; if (state[k] === none) state[k] = remembered[l] ?? OPT[k][0]; else { remembered[l] = state[k]; state[k] = none } }
-  syncControls(); draw(); for (const el of $('legend').querySelectorAll('.tog')) el.classList.toggle('off', layerOff(el.dataset.toggle))
+  syncControls(); draw(); for (const el of $('legend').querySelectorAll('.tog')) el.classList.toggle('off', layerOff(el.dataset.toggle) && !el.classList.contains('na'))
 }
 const unitXY = (u, c) => u.values[c.key]
 const unitPos = (u) => classView() ? unitXY(u, presentOf(cur())) : unitXY(u, cur())

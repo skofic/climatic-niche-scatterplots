@@ -68,15 +68,18 @@ window.Info = (() => {
   const SITE = q.get('dictsite') || (['localhost', '127.0.0.1'].includes(h) ? 'http://localhost:8529' : h.startsWith('panes.') ? `https://dictionary.${h.slice(6)}` : location.origin) + '/_db/metadata/web/'
   const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const href = (g) => `${SITE}#/term/${encodeURIComponent(g)}`
+  // every link to the dictionary site goes to ONE tab, named: the first click opens it, the next ones show their term
+  // there (Milko, 2026-11-14); any other link opens a tab of its own
+  const TERM = 'target="dictionary"', OUT = 'target="_blank" rel="noopener"'
   /** the dictionary's Markdown, as far as its texts use it: paragraphs, bold, italics, code, links (a `gid.md` link is a term page) */
   const md = (t) => esc(t).split(/\n{2,}/).map((p) => '<p>' + p
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => `<a target="_blank" rel="noopener" href="${/^https?:/.test(url) ? url : href(url.replace(/\.md$/, ''))}">${txt}</a>`)
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => /^https?:/.test(url) ? `<a ${OUT} href="${url}">${txt}</a>` : `<a ${TERM} href="${href(url.replace(/\.md$/, ''))}">${txt}</a>`)
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, ' ') + '</p>').join('')
   const has = (g, f) => !!(g && Dict.info(g, f))
   const rich = (g) => g && ['_description', ...SECT].some((f) => has(g, f))
   /** one term's part of a card: head (the title, linked to the term page), definition, description, the three sections */
   function part(g, only) {
-    let out = `<div class="head"><a target="_blank" rel="noopener" href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>`
+    let out = `<div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>`
     if (!only) { const d = Dict.info(g, '_definition'); if (d) out += `<p class="def">${esc(d)}</p>`; if (has(g, '_description')) out += md(Dict.info(g, '_description')) }
     for (const f of only || SECT) if (has(g, f)) out += `<div class="sect${f === '_issues' ? ' issues' : ''}"><div class="sub">${f === '_issues' ? '⚠ ' : ''}${esc(Dict.title(f))}</div>${md(Dict.info(g, f))}</div>`
     return `<div class="term">${out}</div>`
@@ -130,8 +133,14 @@ window.Info = (() => {
    chain of requests reads as one wait. A pane tells its host (or the window that opened it) too, so the host waits with
    its panes; the host counts every pane that is busy. */
 window.Wait = (() => {
-  const busy = new Set(); let timer = null
-  const sync = () => { clearTimeout(timer); if (busy.size) document.body.classList.add('busy'); else timer = setTimeout(() => document.body.classList.remove('busy'), 150) }
+  const busy = new Set(); let timer = null, late = null
+  // a short request (a point read, a selection) must not flicker the controls: the page dims only when the wait lasts
+  // longer than 400 ms (Milko, 2026-11-14)
+  const sync = () => {
+    clearTimeout(timer)
+    if (busy.size) { if (!late && !document.body.classList.contains('busy')) late = setTimeout(() => { late = null; if (busy.size) document.body.classList.add('busy') }, 400) }
+    else { clearTimeout(late); late = null; timer = setTimeout(() => document.body.classList.remove('busy'), 150) }
+  }
   function set(who, on) {
     if (on) busy.add(who); else busy.delete(who); sync()
     if (who !== 'self') return

@@ -102,6 +102,7 @@ input.hint { animation: hint 1.4s ease-in-out infinite alternate }   /* the sear
 .legend .tog { cursor: pointer; border-bottom: 1px dotted transparent }
 .legend .tog:hover { border-bottom-color: var(--muted) }
 .legend .tog.off { opacity: .4 }
+.legend .tog.na { opacity: .3; cursor: default } .legend .tog.na:hover { border-bottom-color: transparent }   /* a layer that needs a species, none chosen: not a switch */
 
 
 /* the hover window of a unit (the same on the map and the scatterplot): number, marks, species, country */
@@ -133,6 +134,6 @@ body.busy .wait { display: inline-block; animation: tilt 1.1s ease-in-out infini
 .pop.card .issues .sub { color: #9a5b00 }
 .pop.card code { font: 12px ui-monospace, Menlo, monospace; background: #f1ece0; padding: 0 3px; border-radius: 3px }
 .pop.card a { color: var(--accent) }
-.warn { display: inline-block; margin-left: 3px; color: #b26a00; font-size: 12px; line-height: 1; cursor: help; border-radius: 3px; vertical-align: baseline }
+.warn { display: inline-block; margin-left: 8px; padding: 0 2px; color: #b26a00; font-size: 12px; line-height: 1; cursor: help; border-radius: 3px; vertical-align: baseline }
 .warn:hover, .warn:focus { color: #7a4700; outline: none; background: #fff1d6 }
 .warn[hidden] { display: none }
