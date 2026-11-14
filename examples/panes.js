@@ -82,13 +82,15 @@ window.Info = (() => {
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => { if (/^https?:/.test(url)) return `<a ${OUT} href="${url}">${txt}</a>`; const g = url.replace(/\.md$/, ''); return `<a ${TERM} href="${href(g)}">${linkText(txt, g)}</a>` })
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, ' ') + '</p>').join('')
   const has = (g, f) => !!(g && Dict.info(g, f))
-  const rich = (g) => g && ['_description', ...SECT].some((f) => has(g, f))
+  const rich = (g) => g && (['_description', ...SECT].some((f) => has(g, f)) || !!Dict.terms.get(g)?._info?._references)
   const sect = (f, body) => `<div class="sect${f === '_issues' ? ' issues' : ''}"><div class="sub">${f === '_issues' ? '⚠ ' : ''}${esc(Dict.title(f))}</div>${body}</div>`
   /** one term's part of a card: head (the title, linked to the term page), definition, description, the three sections */
   function part(g, only) {
     let out = `<div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>`
     if (!only) { const d = Dict.info(g, '_definition'); if (d) out += `<p class="def">${esc(d)}</p>`; if (has(g, '_description')) out += md(Dict.info(g, '_description')) }
     for (const f of only || SECT) if (has(g, f)) out += sect(f, md(Dict.info(g, f)))
+    const R = Dict.terms.get(g)?._info?._references   // what to cite and where it comes from
+    if (!only && R && (R._citation || R._url)) out += sect('_references', [...(R._citation || []), ...(R._url || [])].map(md).join(''))
     return `<div class="term">${out}</div>`
   }
   /** the same part for an object that is not a term but follows the dictionary (a dataset record: title + `_info` texts
