@@ -55,7 +55,8 @@ For your information, since they sit in the same collection: `EU-TREES4F_PREDICT
 grid value (5 arc-minutes); `EU-FOREST_2017`, `ATLAS_RPP_2016` and `ATLAS_MHS_2016` (1 km cells in a
 projected system) will carry the source resolution only; the compilation records
 (`SCATTER_OCCURRENCES`, `SCATTER_UNITS`), the chorology outlines, the species table and the map
-manifest carry neither. This session fills them once the texts are amended.
+manifest carry neither, and `EU-TREES4F_MAPS_2022` (map files on two grids) stays one record without a
+resolution, on Milko's decision. This session fills the others once the texts are amended.
 
 ## Please report back
 

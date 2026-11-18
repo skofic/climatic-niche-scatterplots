@@ -42,7 +42,7 @@ companion note goes to `metadata-external-databases`, which owns the other recor
 The ERA5-Land sentence (an angular source recorded by the ground distance its provider states, `9000`)
 stays: under rule 1 it becomes the general case for every latitude/longitude source.
 
-## C. Two readings by this session, confirmed with Milko before this note was carried
+## C. Three readings by this session, confirmed by Milko on 2026-11-18
 
 1. **Grids in a projected system** (EU-Forest and the two Atlas layers: 1 km cells in ETRS89-LAEA).
    They carry `std_dataset_resolution_source` = `1000` and no `std_dataset_resolution_grid`, because a
@@ -52,6 +52,8 @@ stays: under rule 1 it becomes the general case for every latitude/longitude sou
    chorology polygons), and **compilation records**, which assemble several source datasets of
    different resolutions and name them (`SCATTER_OCCURRENCES`, `SCATTER_UNITS`). For those the reader
    goes to the source records.
+3. **`EU-TREES4F_MAPS_2022`** holds map files on two grids (5 arc-minutes and a projected 10 km grid).
+   Milko leaves it as one record without a resolution; it is not to be split.
 
 ## D. One thing to decide on your side
 
