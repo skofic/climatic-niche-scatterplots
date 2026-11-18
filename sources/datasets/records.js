@@ -32,7 +32,7 @@ export const RECORDS = [
       },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
-    std_dataset_prop: { _collection_list: ['ScatterOccurrences'], std_terms: ['species_list', 'geometry_point'], std_terms_key: ['geometry_point'] },
+    std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterOccurrences'], std_terms: ['species_list', 'geometry_point'], std_terms_key: ['geometry_point'] },
   },
   {
     std_dataset_code: 'EU-TREES4F_PREDICTORS_2022',
@@ -46,8 +46,9 @@ export const RECORDS = [
       },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
-    // the predictors' own grid: 5 arc-minutes, regular latitude / longitude (std_dataset_resolution_grid, decimal degrees)
-    std_dataset_prop: { std_dataset_resolution_grid: 5 / 60, _collection_list: ['ScatterOccurrences'], std_terms: [GID.bio01, GID.bio12, GID.bio15, GID.tas_summer, GID.pr_summer, GID.pr_winter, GID.continentality], std_terms_key: ['geometry_point'] },
+    // resolution rules of 2026-11-18 (metadata-store 9f99093): the source resolution in metres as the provider states it
+    // ("5 arc-minutes (~10 km)", Mauri et al. 2022), the stored grid in degrees written to ten decimals
+    std_dataset_prop: { std_dataset_resolution_source: 10000, std_dataset_resolution_grid: 0.0833333333, _collection_list: ['ScatterOccurrences'], std_terms: [GID.bio01, GID.bio12, GID.bio15, GID.tas_summer, GID.pr_summer, GID.pr_winter, GID.continentality], std_terms_key: ['geometry_point'] },
   },
 ]
 
@@ -106,7 +107,7 @@ RECORDS.push(
       },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
-    std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
+    std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
   {
     std_dataset_code: 'ATLAS_MHS_2016',
@@ -120,7 +121,7 @@ RECORDS.push(
       },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
-    std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
+    std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
 )
 
