@@ -46,7 +46,8 @@ export const RECORDS = [
       },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
-    std_dataset_prop: { _collection_list: ['ScatterOccurrences'], std_terms: [GID.bio01, GID.bio12, GID.bio15, GID.tas_summer, GID.pr_summer, GID.pr_winter, GID.continentality], std_terms_key: ['geometry_point'] },
+    // the predictors' own grid: 5 arc-minutes, regular latitude / longitude (std_dataset_resolution_grid, decimal degrees)
+    std_dataset_prop: { std_dataset_resolution_grid: 5 / 60, _collection_list: ['ScatterOccurrences'], std_terms: [GID.bio01, GID.bio12, GID.bio15, GID.tas_summer, GID.pr_summer, GID.pr_winter, GID.continentality], std_terms_key: ['geometry_point'] },
   },
 ]
 
