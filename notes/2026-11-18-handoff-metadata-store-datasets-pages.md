@@ -1,7 +1,8 @@
 # Handoff to `metadata-store`: dataset pages in the Metadata Store Interface (2026-11-18)
 
 From the `indicator-pair-scatterplots` session, carried by Milko. This is a **specification and a set of
-questions**, not yet an order to build: Milko decides the assignment once you have answered §7.
+questions**. Milko has decided the assignment (§3, §7): **you build the service and the pages**. For now
+he asks only for your answers to §7; nothing is to be built yet.
 
 ## 1. What Milko wants
 
@@ -80,20 +81,32 @@ readable forms ("30″ (1/120°, ≈ 0.9 km)") are computed by its generator; th
   for the manual ("a section in the term page that links to…"), applied to datasets.
 - **Dataset → external resources**: `_references._url`, `_citation` (the DOIs), `_provider`.
 - **Dataset → dataset**: see §6.2.
-- **Panes → dataset page**: the Source card of the map and scatterplot application will link to the
-  dataset page once it has an address (this session).
+- **Map and scatterplot application → dataset page**: in that application the climate *Source* selector
+  opens a reading card that lists the sources, each built from its dataset record. Each source's title
+  there will link to its dataset page in the interface, as term titles in those cards link to term pages.
+  This session does it once the pages have addresses, so the address of a dataset page should be stable
+  and built from the record's code or key.
 
 ## 6. What the records cannot give today
 
-1. **Themes.** "Climate grids", "Drought grids", "Unit topography", "Remote sensing — unit shape
-   averages", "Indicator-pair scatterplots" and their blurbs are **written in the census generator** and
-   matched by collection name (`THEMES` in `data/datasets_census.js`). Pages need them as data: an
-   enumeration with titles and descriptions, and a property on the record, or a rule on collections.
-   Yours and Milko's to design.
+1. **Themes. Decided by Milko (2026-11-18).** Today "Climate grids", "Drought grids", "Unit topography",
+   "Remote sensing — unit shape averages", "Indicator-pair scatterplots" and their blurbs are **written in
+   the census generator** and matched by collection name (`THEMES` in `data/datasets_census.js`). They
+   become dictionary data:
+   - **an enumeration root: a controlled vocabulary of dataset themes**, one element per theme;
+   - **the theme is a value of the dataset record, in the `std_dataset_domn` container**;
+   - the interface takes a section's title from the element's `_title`;
+   - **hovering the title opens a hover window in the interface's style showing `_title`, `_definition`
+     and `_description`**, and no other field of the term.
+
+   Milko calls this a model case of dictionary terms in a user interface. The identifiers, the property's
+   name and whether a record takes one theme or several are yours and his. The generator's titles and
+   blurbs are the starting texts. Each session then sets the theme on its own records.
 2. **Links between datasets.** No property says that one dataset is derived from, compiled from or
    supersedes another. Our own records are the clearest case: `SCATTER_OCCURRENCES` compiles `EU-FOREST_2017`,
    `EU-TREES4F_PREDICTORS_2022`, `WORLDCLIM_V2.1` and `CHELSA_V2.1`, and says so only in prose. A list of
-   record codes with a stated relation would carry it.
+   record codes with a stated relation would carry it. Milko confirms the fact (each dataset "exists as a
+   tree root") and has not yet decided a design: propose one in your answer.
 3. **Summary texts.** The census's page introduction and footer are written in the generator. If the
    entry pages need introductions, they need a home (manual pages, or the theme terms' descriptions).
 4. **Texts written for another reader.** The descriptions of this session's ten records read like
@@ -105,20 +118,19 @@ readable forms ("30″ (1/120°, ≈ 0.9 km)") are computed by its generator; th
    link" the mechanism you would reuse?
 2. Is one service mounted per database (§3) acceptable, and how should it reach the dictionary terms from
    `GeoService`?
-3. **Who builds the service?** This session's recommendation is that the session that builds the pages
-   builds the service too, so that the two are shaped together and no missing field costs a round trip
-   through Milko. That is you. The alternatives are this session (it built the panes' service) or
-   `metadata-external-databases` (it owns `GeoService` and the census). Say what you prefer.
-4. Which new terms do §6.1 and §6.2 need, in your view?
+3. **The service is yours to build, with the pages** (Milko: you know the standards he wants in Foxx
+   services and built the dictionary's). Say what you need from the other two sessions to do it.
+4. The theme vocabulary (§6.1): the identifiers and the property you propose. The links between datasets
+   (§6.2): the design you propose.
 
 ## 8. What the other sessions bring
 
 - `metadata-external-databases`: the census generator as the reference for content and layout; the
   content of its 23 records; it keeps generating the static page until the interface pages exist.
-- `indicator-pair-scatterplots` (this session): the content of its ten records; the showcase server, where
-  a new service mount must be opened in the web server's configuration before it is reachable
-  (`../shared/deployments.md`: only `/web`, `/ui` and `/panes` are exposed there today); the link from the
-  panes.
+- `indicator-pair-scatterplots` (this session): the content of its ten records; **every installation on
+  the showcase server** (Milko), where a new service mount must also be opened in the web server's
+  configuration before it is reachable (`../shared/deployments.md`: only `/web`, `/ui` and `/panes` are
+  exposed there today); the link from the map and scatterplot application (§5).
 
 ## 9. Please report back
 
