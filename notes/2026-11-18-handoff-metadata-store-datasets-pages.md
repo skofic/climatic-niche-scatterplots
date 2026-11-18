@@ -80,7 +80,7 @@ readable forms ("30″ (1/120°, ≈ 0.9 km)") are computed by its generator; th
 - **Term → datasets**: on a term page, the datasets that hold the term. This is the link Milko describes
   for the manual ("a section in the term page that links to…"), applied to datasets.
 - **Dataset → external resources**: `_references._url`, `_citation` (the DOIs), `_provider`.
-- **Dataset → dataset**: see §6.2.
+- **Dataset → dataset**: links inside the descriptions only, see §6.2.
 - **Map and scatterplot application → dataset page**: in that application the climate *Source* selector
   opens a reading card that lists the sources, each built from its dataset record. Each source's title
   there will link to its dataset page in the interface, as term titles in those cards link to term pages.
@@ -102,11 +102,13 @@ readable forms ("30″ (1/120°, ≈ 0.9 km)") are computed by its generator; th
    Milko calls this a model case of dictionary terms in a user interface. The identifiers, the property's
    name and whether a record takes one theme or several are yours and his. The generator's titles and
    blurbs are the starting texts. Each session then sets the theme on its own records.
-2. **Links between datasets.** No property says that one dataset is derived from, compiled from or
-   supersedes another. Our own records are the clearest case: `SCATTER_OCCURRENCES` compiles `EU-FOREST_2017`,
-   `EU-TREES4F_PREDICTORS_2022`, `WORLDCLIM_V2.1` and `CHELSA_V2.1`, and says so only in prose. A list of
-   record codes with a stated relation would carry it. Milko confirms the fact (each dataset "exists as a
-   tree root") and has not yet decided a design: propose one in your answer.
+2. **Links between datasets. Decided by Milko (2026-11-18): in the texts only.** Functionally every
+   dataset stands on its own and depends on no other: **no property links one record to another**. A
+   record's description may contain a link to another dataset (for example `SCATTER_OCCURRENCES` naming
+   `EU-FOREST_2017`, `EU-TREES4F_PREDICTORS_2022`, `WORLDCLIM_V2.1` and `CHELSA_V2.1`, today in plain
+   prose). What is missing is only **the convention for writing such a link** in a Markdown text, so that
+   the interface opens the dataset page as it opens a term page from a term link, and so that the link
+   shows the dataset's title, never its code or key.
 3. **Summary texts.** The census's page introduction and footer are written in the generator. If the
    entry pages need introductions, they need a home (manual pages, or the theme terms' descriptions).
 4. **Texts written for another reader.** The descriptions of this session's ten records read like
@@ -120,8 +122,8 @@ readable forms ("30″ (1/120°, ≈ 0.9 km)") are computed by its generator; th
    `GeoService`?
 3. **The service is yours to build, with the pages** (Milko: you know the standards he wants in Foxx
    services and built the dictionary's). Say what you need from the other two sessions to do it.
-4. The theme vocabulary (§6.1): the identifiers and the property you propose. The links between datasets
-   (§6.2): the design you propose.
+4. The theme vocabulary (§6.1): the identifiers and the property you propose. The link from a text to a dataset
+   (§6.2): the convention you propose, and whether it names the record by its code or its key.
 
 ## 8. What the other sessions bring
 
