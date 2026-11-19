@@ -67,3 +67,34 @@ The link text is the dataset's title or the referring words, never the code. The
 ## Status
 
 Answers and decisions only. The `metadata-store` round that builds this starts with the dictionary step (the theme term and its seven elements, `std_dataset_domn` amended, `std_dataset_group` retired), then the service, then the pages; Milko says when.
+
+## Step 1 done (2026-11-19): the identifiers
+
+The dictionary step is built, loaded on the laptop (33,213 documents, sweep clean) and pushed (`metadata-store`). The other two sessions can set the theme on their records now.
+
+| Gid | Title | Holds |
+|---|---|---|
+| `std_dataset_theme` | Dataset theme | the property, in `std_dataset_domn`, one value per record |
+| `std_dataset_theme_climate` | Climate grids | `CHELSA_V2.1`, `WORLDCLIM_V2.1`, `EU-TREES4F_PREDICTORS_2022` |
+| `std_dataset_theme_drought` | Drought grids | the `EDO_*` / `GDO_*` records |
+| `std_dataset_theme_topography` | Unit topography | the `Shapes` topography record |
+| `std_dataset_theme_remote-sensing` | Remote sensing, unit shape averages | the `ShapeData` / `UnitData` records |
+| `std_dataset_theme_occurrences` | Species occurrences | `EU-FOREST_2017` |
+| `std_dataset_theme_distribution` | Species distribution | `ATLAS_RPP_2016`, `ATLAS_MHS_2016`, `ATLAS_CHOROLOGY_2017`, `EU-TREES4F_MAPS_2022` |
+| `std_dataset_theme_scatterplot` | Indicator-pair scatterplots | `SCATTER_OCCURRENCES`, `SCATTER_UNITS`, `SCATTER_SPECIES`, `SCATTER_MAPS` |
+
+Where it goes on a record:
+
+```json
+"std_dataset_domn": {
+  "std_dataset_extent": "std_dataset_extent_region",
+  "std_dataset_scope": "std_dataset_scope_grid",
+  "std_dataset_theme": "std_dataset_theme_climate"
+}
+```
+
+`std_dataset_domn` lists the theme as `_recommended` and in its `_fields` (third, main panel); the container's body-level index covers it, so it is a facet. A record without a theme still validates; the property becomes `_required` once every record of both registries carries one, at Milko's word. `POST /ui/validate/document` with descriptor `std_dataset` (or `std_dataset_domn` for the container alone) accepts the seven gids and answers `INVALID_ENUM` for anything else.
+
+`std_dataset_group` is retired: the term is gone from the dictionary (`GET /ui/term/std_dataset_group` is 404). No record, link or edge used it, and `metadata-external-databases` already lists it in `RETIRED_NAMES`. The assignment of records to themes above is the proposal from the handoff and the census; each session decides its own records.
+
+Steps 2 and 3 (the service, the pages) wait for Milko's word. The showcase copy is refreshed from the laptop as usual.

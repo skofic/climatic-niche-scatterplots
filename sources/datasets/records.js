@@ -31,7 +31,7 @@ export const RECORDS = [
         _url: ['[EU-Forest on figshare (CC0)](https://doi.org/10.6084/m9.figshare.c.3288407)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_occurrences' },
     std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterOccurrences'], std_terms: ['species_list', 'geometry_point'], std_terms_key: ['geometry_point'] },
   },
   {
@@ -45,7 +45,7 @@ export const RECORDS = [
         _url: ['[EU-Trees4F on figshare (CC0)](https://doi.org/10.6084/m9.figshare.c.5525688)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_climate' },
     // resolution rules of 2026-11-18 (metadata-store 9f99093): the source resolution in metres as the provider states it
     // ("5 arc-minutes (~10 km)", Mauri et al. 2022), the stored grid in degrees written to ten decimals
     std_dataset_prop: { std_dataset_resolution_source: 10000, std_dataset_resolution_grid: 0.0833333333, _collection_list: ['ScatterOccurrences'], std_terms: [GID.bio01, GID.bio12, GID.bio15, GID.tas_summer, GID.pr_summer, GID.pr_winter, GID.continentality], std_terms_key: ['geometry_point'] },
@@ -78,7 +78,7 @@ RECORDS.push(
         _url: ['[EU-Trees4F on figshare (CC0)](https://doi.org/10.6084/m9.figshare.c.5525688)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_distribution' },
     std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
   {
@@ -92,7 +92,7 @@ RECORDS.push(
         _url: ['[Chorological maps on Mendeley Data (CC BY 4.0)](https://data.mendeley.com/datasets/hr5h2hcgg4)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_shape' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_shape', std_dataset_theme: 'std_dataset_theme_distribution' },
     std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
   {
@@ -106,7 +106,7 @@ RECORDS.push(
         _url: ['[Atlas data and metadata](https://forest.jrc.ec.europa.eu/en/european-atlas/atlas-data-and-metadata/)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_distribution' },
     std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
   {
@@ -120,7 +120,7 @@ RECORDS.push(
         _url: ['[Atlas data and metadata](https://forest.jrc.ec.europa.eu/en/european-atlas/atlas-data-and-metadata/)'],
       },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_distribution' },
     std_dataset_prop: { std_dataset_resolution_source: 1000, _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
 )
@@ -137,7 +137,7 @@ RECORDS.push(
       _issues: eng('WorldClim future monthly layers carry only daily extremes, so its future temperature-derived indicators use the mean of the daily maximum and minimum, tas ≈ (tasmax + tasmin) / 2. Radiation exists for the WorldClim historical period only. 1 715 cells lie outside the land mask of the 1 km grids and have no WorldClim or CHELSA values.'),
       _references: { _citation: [CITE.euforest, CITE.eutrees4f, CITE.worldclim, CITE.chelsa], _url: [REPO_URL] },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterOccurrences', 'ScatterCells'], std_terms: ['species_list', 'geometry_point', 'geometry_hash', ...SCATTER_TERMS()], std_terms_key: ['geometry_point'] },
   },
   {
@@ -150,7 +150,7 @@ RECORDS.push(
       _issues: eng('26 target species of units (for example *Fagus orientalis*, 28 units) match no occurrence or map source: those units appear without a species layer.'),
       _references: { _citation: [CITE.eutrees4f, CITE.worldclim, CITE.chelsa], _provider: ['[EUFGIS](http://www.eufgis.org)'], _url: [REPO_URL] },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_gcu', std_dataset_scope: 'std_dataset_scope_shape' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_gcu', std_dataset_scope: 'std_dataset_scope_shape', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterUnits'], std_terms: ['gcu_id_number', 'species_list', 'gcu_loc_coordinates-restriction', 'gcu_loc_climate', 'gcu_loc_climate_distance', 'geometry_point', 'geometry_hash', ...SCATTER_TERMS()], std_terms_key: ['gcu_id_number'] },
   },
   {
@@ -161,7 +161,7 @@ RECORDS.push(
       _description: eng('The catalogue of taxa named by any source of the scatterplots and maps (271): the scientific name as identifier (a surrogate key allows UPOV codes to be added later without re-keying), synonyms folded in, and per taxon the EU-Forest occurrence counts and the availability of EU-Trees4F maps, Atlas presence and suitability maps and EUFGIS target-species units. A catalogue, not spatial data: extent and scope are those of the data it indexes.'),
       _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterSpecies'], std_terms: ['species'], std_terms_key: ['species'] },
   },
   {
@@ -172,7 +172,7 @@ RECORDS.push(
       _description: eng('One document per served map file: EU-Trees4F suitability rasters (SDM ensemble, current and future, cloud-optimised GeoTIFF), European Atlas of Forest Tree Species relative probability of presence and maximum habitat suitability rasters (1 km, EPSG:3035), and the Atlas chorology polygons (GeoJSON), with species, source, period, scenario, variant, file path, projection, resolution, licence and citation. A catalogue of files, not spatial data itself.'),
       _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
     },
-    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid' },
+    std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },
   },
 )
