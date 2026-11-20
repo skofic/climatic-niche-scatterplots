@@ -6,16 +6,16 @@ Written to the laptop's `GeoService.Dataset` from `sources/datasets/records.js`;
 
 | Record | Title | Definition |
 |---|---|---|
-| `EU-FOREST_2017` | EU-Forest tree occurrences | Presence records of tree species in European forest plots, harmonised from national forest inventories and two European surveys; they describe the forests of around 2005. |
-| `EU-TREES4F_PREDICTORS_2022` | EU-Trees4F climate predictors | The climate variables with which the EU-Trees4F species distribution models were calibrated and projected, for a historical baseline and for future periods under two emission scenarios. |
-| `EU-TREES4F_MAPS_2022` | EU-Trees4F species distribution maps | Modelled climatic suitability of European tree species, for the present and for future periods under two emission scenarios. |
-| `ATLAS_CHOROLOGY_2017` | Chorological maps for the main European woody species *(unchanged)* | Native and introduced ranges of the main European tree and shrub species, drawn by experts. |
-| `ATLAS_RPP_2016` | European Atlas: relative probability of presence | Modelled relative probability of presence of tree taxa, from the European Atlas of Forest Tree Species. |
-| `ATLAS_MHS_2016` | European Atlas: maximum habitat suitability | Modelled maximum habitat suitability of tree taxa, from the European Atlas of Forest Tree Species. |
-| `SCATTER_OCCURRENCES` | EU-Forest cells in present and future climate | The cells surveyed in EU-Forest, each with the species observed there and its climate, present and future, from three climate sources. |
-| `SCATTER_UNITS` | Conservation units in present and future climate | The EUFGIS gene conservation units, each with its target species and its climate, present and future, from three climate sources. |
-| `SCATTER_SPECIES` | Species of the scatterplots and maps | The taxa named by the sources of the scatterplots and the maps, each with what exists for it. |
-| `SCATTER_MAPS` | Map layer manifest | The map files the application serves, one entry per file. |
+| `EU-FOREST_2017` | EU-Forest tree occurrences | Presence of tree species in forest plots across Europe, harmonised by the Joint Research Centre from national forest inventories and the Forest Focus and BioSoil surveys; forests of around 2005. |
+| `EU-TREES4F_PREDICTORS_2022` | EU-Trees4F climate predictors | Temperature, precipitation and continentality variables behind the EU-Trees4F species distribution models: WorldClim 1.4 for the 1961–1990 baseline, and EURO-CORDEX regional climate projections for three periods to 2080 under RCP 4.5 and RCP 8.5. |
+| `EU-TREES4F_MAPS_2022` | EU-Trees4F species distribution maps | Climatic suitability of European tree species from the EU-Trees4F ensemble of species distribution models, for the period centred on 2005 and for three future periods to 2095 under RCP 4.5 and RCP 8.5. |
+| `ATLAS_CHOROLOGY_2017` | Chorological maps for the main European woody species *(unchanged)* | Native and introduced ranges of the main European tree and shrub species, drawn by experts from the botanical literature for the European Atlas of Forest Tree Species. |
+| `ATLAS_RPP_2016` | European Atlas: relative probability of presence | Relative probability of presence of tree taxa, modelled from harmonised forest plot data (C-SMFA model); European Atlas of Forest Tree Species, Joint Research Centre, 2016. |
+| `ATLAS_MHS_2016` | European Atlas: maximum habitat suitability | Maximum habitat suitability of tree taxa, modelled from the bioclimate of the plots where each taxon occurs (RDS-MHS model); European Atlas of Forest Tree Species, Joint Research Centre, 2016. |
+| `SCATTER_OCCURRENCES` | EU-Forest cells in present and future climate | Species observed in each cell surveyed by EU-Forest, with the climate indicators of the cell from EU-Trees4F, WorldClim 2.1 and CHELSA 2.1, for the reference periods and for modelled future periods to 2100. |
+| `SCATTER_UNITS` | Conservation units in present and future climate | Target species and climate indicators of each EUFGIS gene conservation unit at its climate reference point, from EU-Trees4F, WorldClim 2.1 and CHELSA 2.1, for the reference periods and for modelled future periods to 2100. |
+| `SCATTER_SPECIES` | Species of the scatterplots and maps | Taxa named by the sources of the scatterplots and the maps, by accepted scientific name, with the occurrences, distribution maps and conservation units that exist for each. |
+| `SCATTER_MAPS` | Map layer manifest | Map files served by the application, one entry per file: species, source, period, scenario and variant, with the projection, licence and citation of the file. |
 
 ## How the rules fitted
 
@@ -23,8 +23,9 @@ Written to the laptop's `GeoService.Dataset` from `sources/datasets/records.js`;
   publication (53 characters), which is how the dataset is known and cited.
 - **Rule 2 (version):** none of ours has a version; the year of publication is in the code and the citation.
 - **Rule 5 (no property repeated):** "1 km" and "5 arc-minutes" left the titles.
-- **Definitions kept general (Milko, same day):** the detail of a study (how many species, how many
-  models, which periods) belongs to `_description`, not to `_definition`. The descriptions of the two
+- **Definitions aligned with your 23 (Milko, same day):** what is described, from what source, for which
+  periods, in your wording style. Counts of a study (how many species, how many models) stay out of the
+  definition and go to `_description`. The descriptions of the two
   EU-Trees4F records gained a paragraph **"What is taken from the study"**, checked against the published
   files and the manifest: predictors, all seven variables, the future as the mean of the eleven models,
   the single-model layers not kept; maps, all 67 species, all periods and both scenarios, the SDM ensemble
