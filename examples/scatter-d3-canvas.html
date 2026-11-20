@@ -514,7 +514,7 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   $('mapSelClear').addEventListener('click', () => { selectFromMap(null); post({ [K.mapSel]: null }) })   // the host clears the map too
   $('reset').addEventListener('click', resetView); $('reset').title = Dict.title('ui_layout_label_reset')
   $('settings').addEventListener('click', () => document.body.classList.toggle('settings')); $('settings').title = Dict.title('ui_layout_scatterplot_layer')
-  Info.records(document.querySelector('[data-term=ui_layout_label_source]'), $('product'), () => cat.datasets.map((d) => ({ key: d[K.dataset], title: d.title, info: d.info })))
+  Info.records(document.querySelector('[data-term=ui_layout_label_source]'), $('product'), () => cat.datasets.map((d) => ({ key: d[K.dataset], title: d.title, code: d.code, info: d.info })))
   Pop.bind(status); Pop.bind($('help')); Pop.set($('help'), Dict.title('ui_layout_scatterplot_label_hints'), Dict.def('ui_layout_scatterplot_label_hints'))
   $('selClear').addEventListener('click', () => { state[K.selection] = []; $('selCount').textContent = 0; draw(); post({ [K.selection]: [] }) })
   new ResizeObserver(() => { size(); draw() }).observe(wrap)

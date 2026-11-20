@@ -70,6 +70,9 @@ window.Info = (() => {
   const SITE = q.get('dictsite') || (['localhost', '127.0.0.1'].includes(h) ? 'http://localhost:8529' : h.startsWith('panes.') ? `https://dictionary.${h.slice(6)}` : location.origin) + '/_db/metadata/web/'
   const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const href = (g) => `${SITE}#/term/${encodeURIComponent(g)}`
+  // a dataset's page on the dictionary site, addressed by the record's code: what a `[words](dataset:CODE)` link in a
+  // text and the title of a source in the Source card open (2026-11-20)
+  const dataset = (code) => `${SITE}#/dataset/${encodeURIComponent(code)}`
   // every link to the dictionary site goes to ONE tab, named: the first click opens it, the next ones show their term
   // there (Milko, 2026-11-14); any other link opens a tab of its own
   const TERM = 'target="dictionary"', OUT = 'target="_blank" rel="noopener"'
@@ -77,9 +80,9 @@ window.Info = (() => {
   // identifier, the term's title stands for it. Titles not fetched yet are fetched and the card is drawn again.
   let want = new Set()
   const linkText = (txt, g) => { const bare = txt.replace(/^`|`$/g, ''); if (bare !== g) return txt; if (Dict.terms.has(g)) return Dict.terms.get(g) ? esc(Dict.title(g)) : txt; want.add(g); return '…' }
-  /** the dictionary's Markdown, as far as its texts use it: paragraphs, bold, italics, code, links (a `gid.md` link is a term page) */
+  /** the dictionary's Markdown, as far as its texts use it: paragraphs, bold, italics, code, links (a `gid.md` link is a term page, a `dataset:CODE` link a dataset page) */
   const md = (t) => esc(t).split(/\n{2,}/).map((p) => '<p>' + p
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => { if (/^https?:/.test(url)) return `<a ${OUT} href="${url}">${txt}</a>`; const g = url.replace(/\.md$/, ''); return `<a ${TERM} href="${href(g)}">${linkText(txt, g)}</a>` })
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) => { if (/^https?:/.test(url)) return `<a ${OUT} href="${url}">${txt}</a>`; if (url.startsWith('dataset:')) return `<a ${TERM} href="${dataset(url.slice(8))}">${txt}</a>`; const g = url.replace(/\.md$/, ''); return `<a ${TERM} href="${href(g)}">${linkText(txt, g)}</a>` })
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, ' ') + '</p>').join('')
   const has = (g, f) => !!(g && Dict.info(g, f))
   const rich = (g) => g && (['_description', ...SECT].some((f) => has(g, f)) || !!Dict.terms.get(g)?._info?._references)
@@ -153,10 +156,10 @@ window.Info = (() => {
   }
   /** a selector whose options are records, not terms (the climate source): the label's card lists every record and
    *  opens the chosen one; the selector gets the warning mark when the chosen record has issues.
-   *  records() → [{ key, title, info }], sel.value is the chosen key */
+   *  records() → [{ key, title, code, info }], sel.value is the chosen key */
   function records(label, sel, records) {
     const cur = () => records().find((r) => String(r.key) === sel.value)
-    label._extra = () => `<div class="opts">${records().map((r) => block(String(r.key) === sel.value, r.title, null, recordBody(r.info), first(r.info && r.info._description))).join('')}</div>`
+    label._extra = () => `<div class="opts">${records().map((r) => block(String(r.key) === sel.value, r.title, r.code ? dataset(r.code) : null, recordBody(r.info), first(r.info && r.info._description))).join('')}</div>`
     const mark = warn(); sel.after(mark); mark._card = () => { const r = cur(); return r && r.info && r.info._issues ? build(mark, () => `<div class="term"><div class="head">${esc(r.title)}</div>${recordBody(r.info, ['_issues'])}</div>`) : null }; Pop.bind(mark)
     const sync = () => { const r = cur(); mark.hidden = !(r && r.info && r.info._issues) }
     sel.addEventListener('change', sync); recordSyncs.push(sync); sync()
