@@ -43,3 +43,13 @@ the terms. Stated in the file, Part 3, point 10. Milko decides.
 
 Milko carries the file to the other two sessions and writes the idea document. The dictionary interface
 has done much of this ground and will have suggestions of its own.
+
+## Changed on 2026-11-20 (Milko)
+
+The idea document is no longer circulated among the three repositories. `metadata-store` wrote the rules
+reached so far as one living document of the shared folder, *Guidelines - terms for the user interface*
+(beside the idea document and this repository's use-cases file, which are its sources). Every repository
+that builds an interface reads it first and amends it in the round that adds or changes a rule, with a
+line in its changelog. For this repository: when Milko comes back to polish and finalise the panes, the
+guidelines are the reference for what is not known here, and the place where the new rules and
+constructs of that review are written.
