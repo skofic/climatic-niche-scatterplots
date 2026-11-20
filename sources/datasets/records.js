@@ -24,7 +24,8 @@ export const RECORDS = [
     std_dataset_code: 'EU-FOREST_2017',
     std_date_submission: today, std_date_start: '2005', std_date_end: '2005',
     _info: {
-      _title: eng('EU-Forest, a high-resolution tree occurrence dataset for Europe'),
+      _title: eng("EU-Forest tree occurrences"),
+      _definition: eng("Presence records of tree species in the plots of 21 National Forest Inventories and of the Forest Focus and BioSoil surveys, harmonised by the Joint Research Centre to the cells of the INSPIRE grid; they describe the forests of around 2005."),
       _description: eng("EU-Forest is a dataset of tree species occurrences across Europe, compiled by the Joint Research Centre from 21 National Forest Inventories and from the Forest Focus and BioSoil surveys. It records 588 983 occurrences of 242 species in 249 410 plots, each placed at the centre of a cell of the INSPIRE 1 km grid (ETRS89-LAEA, EPSG:3035).\n\nThe data record presence only: a plot lists the species that were found there. The survey years are not published; the inventories were gathered up to the 2008 framework contract of the Joint Research Centre and describe the forests of around 2005.\n\nHere the occurrences are the ground of the indicator-pair scatterplots: all surveyed cells form the base layer, and the cells where a species was found form the layer of that species. They are stored, with the climate of each cell, in the [occurrence cells](dataset:SCATTER_OCCURRENCES)."),
       _references: {
         _citation: ['Mauri, A., Strona, G., San-Miguel-Ayanz, J. (2017). EU-Forest, a high-resolution tree occurrence dataset for Europe. *Scientific Data* 4:160123. doi: [10.1038/sdata.2016.123](https://doi.org/10.1038/sdata.2016.123)'],
@@ -38,7 +39,8 @@ export const RECORDS = [
     std_dataset_code: 'EU-TREES4F_PREDICTORS_2022',
     std_date_submission: today, std_date_start: '1961', std_date_end: '2080',
     _info: {
-      _title: eng('EU-Trees4F climate predictors, historical and future (WorldClim 1.4 baseline, EURO-CORDEX ensemble, 5 arc-minutes)'),
+      _title: eng("EU-Trees4F climate predictors"),
+      _definition: eng("The seven temperature and precipitation variables with which the EU-Trees4F species distribution models were calibrated and projected: WorldClim 1.4 for the 1961–1990 baseline, and the mean of eleven EURO-CORDEX regional climate models for three periods to 2080 under RCP 4.5 and RCP 8.5."),
       _description: eng("The seven climate layers with which the EU-Trees4F study calibrated and projected its species distribution models: mean annual temperature, annual precipitation, precipitation seasonality, summer temperature, summer precipitation, winter precipitation and continentality, on a grid of 5 arc-minutes (about 10 km) in WGS84.\n\nThe historical layers are WorldClim 1.4 for 1961–1990. The future layers are the mean of eleven EURO-CORDEX regional climate models, brought onto the same baseline by the change-factor method, for 1991–2020, 2021–2050 and 2051–2080 under the RCP 4.5 and RCP 8.5 scenarios. This is the exact climate behind the [EU-Trees4F distribution maps](dataset:EU-TREES4F_MAPS_2022).\n\nHere it is the climate the scatterplots show first, the climate as the study modelled it. Its values are read at every [occurrence cell](dataset:SCATTER_OCCURRENCES) and at every [gene conservation unit](dataset:SCATTER_UNITS). The same indicators from two sources at 1 km, [WorldClim 2.1](dataset:WORLDCLIM_V2.1) and [CHELSA 2.1](dataset:CHELSA_V2.1), can be selected in its place."),
       _methods: eng("The published layers store temperatures multiplied by ten and seasonal precipitation as the total of three months. The values kept here are in physical units: temperatures divided by ten, and seasonal totals divided by three to give the mean monthly amount."),
       _references: {
@@ -71,7 +73,8 @@ RECORDS.push(
     std_dataset_code: 'EU-TREES4F_MAPS_2022',
     std_date_submission: today, std_date_start: '2005', std_date_end: '2095',
     _info: {
-      _title: eng('EU-Trees4F species distribution maps (current and future suitability, 5 arc-minutes)'),
+      _title: eng("EU-Trees4F species distribution maps"),
+      _definition: eng("Climatic suitability of 67 European tree species, modelled by an ensemble of species distribution models for the period centred on 2005 and for three future periods to 2095 under RCP 4.5 and RCP 8.5."),
       _description: eng("The modelled distribution of 67 European tree species from the EU-Trees4F study. An ensemble of species distribution models, calibrated and projected with the [EU-Trees4F climate predictors](dataset:EU-TREES4F_PREDICTORS_2022), gives the climatic suitability of every cell for each species in the current period (centred on 2005) and in three future periods (centred on 2035, 2065 and 2095) under the RCP 4.5 and RCP 8.5 scenarios.\n\nEach map is published in four variants: potential, wherever the climate suits the species; realised, within the native range; natural dispersal, where the species can arrive by itself; and clipped to forest land use. Suitability is published as a probability (0 to 1000) at 5 arc-minutes in WGS84, and as binary presence on the 10 km INSPIRE grid (ETRS89-LAEA).\n\nThe study publishes two ensembles, one of species distribution models and one of climate models. The first is the one served here, as the suitability layers of the map. The files are cloud-optimised GeoTIFF, listed in the [map layer manifest](dataset:SCATTER_MAPS)."),
       _issues: eng('Known defect of the published files: the natural-dispersal binary rasters carry no coordinate reference system. They sit on the 10 km INSPIRE EPSG:3035 grid of the potential ones, cropped by whole cells (verified), and the served copies have the coordinate reference system assigned.'),
       _references: {
@@ -86,7 +89,8 @@ RECORDS.push(
     std_dataset_code: 'ATLAS_CHOROLOGY_2017',
     std_date_submission: today, std_date_start: '2016', std_date_end: '2016',
     _info: {
-      _title: eng('Chorological maps for the main European woody species'),
+      _title: eng("Chorological maps for the main European woody species"),
+      _definition: eng("Native and introduced ranges of the main European tree and shrub species, drawn by experts from the botanical literature for the European Atlas of Forest Tree Species."),
       _description: eng("The native and introduced ranges of the main European tree and shrub species, drawn by experts: polygons for continuous areas, points for isolated populations and for synanthropic occurrences. They were compiled for the European Atlas of Forest Tree Species from Meusel & Jäger, Hultén & Fries, the Atlas Florae Europaeae, EUFORGEN and other sources, and cover 145 taxa in 238 layers.\n\nHere they are the range outline drawn on the map. The files are GeoJSON in WGS84, listed in the [map layer manifest](dataset:SCATTER_MAPS)."),
       _references: {
         _citation: ['Caudullo, G., Welk, E., San-Miguel-Ayanz, J. (2017). Chorological maps for the main European woody species. *Data in Brief* 12:662–666. doi: [10.1016/j.dib.2017.05.007](https://doi.org/10.1016/j.dib.2017.05.007)'],
@@ -100,7 +104,8 @@ RECORDS.push(
     std_dataset_code: 'ATLAS_RPP_2016',
     std_date_submission: today, std_date_start: '2016', std_date_end: '2016',
     _info: {
-      _title: eng('European Atlas of Forest Tree Species: relative probability of presence (C-SMFA), 1 km'),
+      _title: eng("European Atlas: relative probability of presence"),
+      _definition: eng("Relative probability of presence of tree taxa, modelled from harmonised forest plot data by constrained spatial multi-frequency analysis (C-SMFA); European Atlas of Forest Tree Species, Joint Research Centre, 2016."),
       _description: eng("The relative probability of presence of 39 tree taxa on a 1 km grid, from the European Atlas of Forest Tree Species (Joint Research Centre, 2016). It is modelled, not interpolated: a constrained spatial multi-frequency analysis (C-SMFA) of the same harmonised forest plot data as [EU-Forest](dataset:EU-FOREST_2017), constrained by land cover.\n\nHere it is the species layer the map shows first. The Atlas also maps where conditions suit each taxon, as [maximum habitat suitability](dataset:ATLAS_MHS_2016).\n\nThe maps may be reused under the reuse policy of the European Commission (Decision 2011/833/EU, that is CC BY 4.0). Each layer has its own DOI in the JRC Data Catalogue, recorded with its file in the [map layer manifest](dataset:SCATTER_MAPS). The files are cloud-optimised GeoTIFF."),
       _references: {
         _citation: ['de Rigo, D., Caudullo, G., Houston Durrant, T., San-Miguel-Ayanz, J. (2016). The European Atlas of Forest Tree Species: modelling, data and information on forest tree species. In: San-Miguel-Ayanz, J. et al. (eds.), European Atlas of Forest Tree Species. Publ. Off. EU, Luxembourg, pp. e01aa69+. [w3id.org/mtv/FISE-Comm/v01/e01aa69](https://w3id.org/mtv/FISE-Comm/v01/e01aa69)'],
@@ -114,7 +119,8 @@ RECORDS.push(
     std_dataset_code: 'ATLAS_MHS_2016',
     std_date_submission: today, std_date_start: '2016', std_date_end: '2016',
     _info: {
-      _title: eng('European Atlas of Forest Tree Species: maximum habitat suitability (RDS-MHS), 1 km'),
+      _title: eng("European Atlas: maximum habitat suitability"),
+      _definition: eng("Maximum habitat suitability of tree taxa, modelled as the similarity of the bioclimate of each place to that of the plots where the taxon occurs (RDS-MHS); European Atlas of Forest Tree Species, Joint Research Centre, 2016."),
       _description: eng("The maximum habitat suitability of 27 tree taxa on a 1 km grid, from the European Atlas of Forest Tree Species (Joint Research Centre, 2016). The model (RDS-MHS, relative distance similarity) measures how similar the bioclimate of each cell is to the bioclimate of the plots where the taxon occurs, with WorldClim 1.4 climate and GMTED2010 terrain as covariates.\n\nIt stands beside the [relative probability of presence](dataset:ATLAS_RPP_2016) of the same Atlas as a second species layer of the map.\n\nThe maps may be reused under the reuse policy of the European Commission (CC BY 4.0). Each layer has its own DOI in the JRC Data Catalogue, recorded with its file in the [map layer manifest](dataset:SCATTER_MAPS). The files are cloud-optimised GeoTIFF."),
       _references: {
         _citation: ['de Rigo, D., Caudullo, G., Houston Durrant, T., San-Miguel-Ayanz, J. (2016). The European Atlas of Forest Tree Species: modelling, data and information on forest tree species. In: San-Miguel-Ayanz, J. et al. (eds.), European Atlas of Forest Tree Species. Publ. Off. EU, Luxembourg, pp. e01aa69+. [w3id.org/mtv/FISE-Comm/v01/e01aa69](https://w3id.org/mtv/FISE-Comm/v01/e01aa69)'],
@@ -132,7 +138,8 @@ RECORDS.push(
     std_dataset_code: 'SCATTER_OCCURRENCES',
     std_date_submission: today, std_date_start: '1961', std_date_end: '2100',
     _info: {
-      _title: eng('Indicator pair scatterplots: EU-Forest occurrence cells with present and future climate'),
+      _title: eng("EU-Forest cells in present and future climate"),
+      _definition: eng("The cells surveyed in EU-Forest, each with the species observed there and its climate indicators from EU-Trees4F, WorldClim 2.1 and CHELSA 2.1, for the reference periods and for modelled future periods to 2100."),
       _description: eng("The data behind the base layer and the species layer of the indicator-pair scatterplots: one record for each of the 250 569 cells of 1 km surveyed in [EU-Forest](dataset:EU-FOREST_2017), with the species observed there, the centre of the cell and the climate of the cell. As in the autoecology diagrams of the European Atlas of Forest Tree Species, all the cells together form the base layer, and the cells where a species was observed form the layer of that species.\n\nThe climate comes from three sources, kept side by side so that the same indicator can be compared between them:\n\n**[EU-Trees4F predictors](dataset:EU-TREES4F_PREDICTORS_2022)**, at 10 km: 1961–1990, then 1991–2020, 2021–2050 and 2051–2080 under RCP 4.5 and RCP 8.5.\n\n**[WorldClim 2.1](dataset:WORLDCLIM_V2.1)**, at 1 km: 1970–2000, then four periods from 2021 to 2100.\n\n**[CHELSA 2.1](dataset:CHELSA_V2.1)**, at 1 km: 1981–2010, then three periods from 2011 to 2100.\n\nThe futures of the two sources at 1 km come from the MPI-ESM1-2-HR model under the SSP3-7.0 scenario.\n\nEach cell carries the annual indicators and those derived from monthly values: summer and winter means, continentality, coldest-month temperature, spring-summer radiation and the seasonality ratio. A future value is the climate projected for the place of a present occurrence; it does not say that the species will still be there."),
       _methods: eng("The centre of each EU-Forest cell is reprojected to WGS84 and read in the grid cell that contains it, at the resolution of each source (1 km for WorldClim 2.1 and CHELSA 2.1, 5 arc-minutes for the EU-Trees4F predictors). Nothing is interpolated and no cell is left out. The values are kept at full precision under `properties`, by source, then by period, then by model and scenario for the futures. The climate cells read are kept in the `ScatterCells` collection."),
       _issues: eng('WorldClim future monthly layers carry only daily extremes, so its future temperature-derived indicators use the mean of the daily maximum and minimum, tas ≈ (tasmax + tasmin) / 2. Radiation exists for the WorldClim historical period only. 1 715 cells lie outside the land mask of the 1 km grids and have no WorldClim or CHELSA values.'),
@@ -145,7 +152,8 @@ RECORDS.push(
     std_dataset_code: 'SCATTER_UNITS',
     std_date_submission: today, std_date_start: '1961', std_date_end: '2100',
     _info: {
-      _title: eng('Indicator pair scatterplots: gene conservation units in present and future climate'),
+      _title: eng("Conservation units in present and future climate"),
+      _definition: eng("The EUFGIS gene conservation units, each read at its climate reference point, with its target species and its climate indicators from EU-Trees4F, WorldClim 2.1 and CHELSA 2.1, for the reference periods and for modelled future periods to 2100."),
       _description: eng("The data behind the units layer of the indicator-pair scatterplots, the layer the application exists for: one record for each of the 3 669 gene conservation units of EUFGIS, with the unit number, its target species and its climate, in the same sources and periods as the [occurrence cells](dataset:SCATTER_OCCURRENCES). It shows where each unit sits in the climate of its species today, and where the coming periods move it.\n\nA unit is read at its climate reference point. The record states that point and its distance from the polygon of the unit, in kilometres (0 when the point lies inside). The distance is a fact of data quality: a point far from its unit describes the climate of another place.\n\nUnits whose coordinates are restricted carry their climate values and the distance only: no point, and no reference to a cell."),
       _methods: eng("Each unit is read at its climate reference point in the same way as the occurrence cells. The distance is measured on the ETRS89-LAEA plane (EPSG:3035). The records are rebuilt from the EUFGIS units by a refresh command; the date of the last refresh is the submission date of this record."),
       _issues: eng('26 target species of units (for example *Fagus orientalis*, 28 units) match no occurrence or map source: those units appear without a species layer.'),
@@ -158,7 +166,8 @@ RECORDS.push(
     std_dataset_code: 'SCATTER_SPECIES',
     std_date_submission: today, std_date_start: '2016', std_date_end: '2026',
     _info: {
-      _title: eng('Indicator pair scatterplots: species table'),
+      _title: eng("Species of the scatterplots and maps"),
+      _definition: eng("The taxa named by any source of the scatterplots and the maps, by accepted scientific name, each with what exists for it: occurrences, distribution maps and conservation units."),
       _description: eng("The list of the 271 taxa named by any source of the scatterplots and the maps. A taxon is identified by its scientific name, with synonyms folded into the accepted name. For each taxon the record states what exists: the number of [EU-Forest](dataset:EU-FOREST_2017) occurrences, and whether there are [EU-Trees4F maps](dataset:EU-TREES4F_MAPS_2022), Atlas maps of [presence](dataset:ATLAS_RPP_2016) and of [suitability](dataset:ATLAS_MHS_2016), and [gene conservation units](dataset:SCATTER_UNITS) that have it as target species.\n\nIt is a catalogue, not geographic data: its extent and scope are those of the data it indexes. The key of a record is not the name, so that UPOV codes can be added later without changing the records that refer to a taxon."),
       _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
     },
@@ -169,7 +178,8 @@ RECORDS.push(
     std_dataset_code: 'SCATTER_MAPS',
     std_date_submission: today, std_date_start: '2005', std_date_end: '2095',
     _info: {
-      _title: eng('Indicator pair scatterplots: map layer manifest'),
+      _title: eng("Map layer manifest"),
+      _definition: eng("The map files the application serves, one entry per file, stating the species, the source, the period, the scenario and the variant of the map, with the projection, the licence and the citation of the file."),
       _description: eng("The list of the map files the application serves, one record for each file: the [EU-Trees4F suitability maps](dataset:EU-TREES4F_MAPS_2022) for the current and future periods, the Atlas maps of [relative probability of presence](dataset:ATLAS_RPP_2016) and of [maximum habitat suitability](dataset:ATLAS_MHS_2016) at 1 km, and the [range outlines](dataset:ATLAS_CHOROLOGY_2017). The grids are cloud-optimised GeoTIFF files, the outlines GeoJSON.\n\nEach record states the species, the source, the period, the scenario and the variant of the map, then the file, its projection and resolution, its licence and its citation.\n\nIt is a catalogue of files, not geographic data itself."),
       _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
     },

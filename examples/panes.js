@@ -156,10 +156,10 @@ window.Info = (() => {
   }
   /** a selector whose options are records, not terms (the climate source): the label's card lists every record and
    *  opens the chosen one; the selector gets the warning mark when the chosen record has issues.
-   *  records() → [{ key, title, code, info }], sel.value is the chosen key */
+   *  records() → [{ key, title, code, definition, info }], sel.value is the chosen key */
   function records(label, sel, records) {
     const cur = () => records().find((r) => String(r.key) === sel.value)
-    label._extra = () => `<div class="opts">${records().map((r) => block(String(r.key) === sel.value, r.title, r.code ? dataset(r.code) : null, recordBody(r.info), first(r.info && r.info._description))).join('')}</div>`
+    label._extra = () => `<div class="opts">${records().map((r) => block(String(r.key) === sel.value, r.title, r.code ? dataset(r.code) : null, recordBody(r.info), r.definition && r.definition !== (r.info || {})._description ? r.definition : first(r.info && r.info._description))).join('')}</div>`
     const mark = warn(); sel.after(mark); mark._card = () => { const r = cur(); return r && r.info && r.info._issues ? build(mark, () => `<div class="term"><div class="head">${esc(r.title)}</div>${recordBody(r.info, ['_issues'])}</div>`) : null }; Pop.bind(mark)
     const sync = () => { const r = cur(); mark.hidden = !(r && r.info && r.info._issues) }
     sel.addEventListener('change', sync); recordSyncs.push(sync); sync()
