@@ -1,7 +1,8 @@
 # Handoff: two repositories and the product renamed (2026-11-23)
 
 **From:** the `climatic-niche-scatterplots` session, 2026-11-23. **To:** `metadata-store` (items 1–3),
-`metadata-external-databases` (end of item 2, item 3) and `metadata-store-interface` (item 3 only). Carried by Milko.
+`metadata-external-databases` (end of item 2, item 3). `metadata-store-interface` has no `CLAUDE.md` and
+nothing that depends on the names: nothing to do there (its `MILKO.md` line 247 is history). Carried by Milko.
 
 Milko renamed two repositories the same day, on GitHub and on the laptop:
 
@@ -55,7 +56,7 @@ For `metadata-external-databases`: `CLAUDE.md` line 107 ("the indicator-pair sca
 fixture `lib/fixtures/dataset.snapshot.json` (a copy of the `std_dataset_theme` text, regenerated from
 the dictionary once it changes).
 
-## 3. One dated line in `CLAUDE.md` (all three)
+## 3. One dated line in `CLAUDE.md` (both)
 
 Please add one dated line saying the two repositories and the product were renamed, with the table above. Entries that
 point to our notes as `indicator-pair-scatterplots/notes/…` stay as written (they are history); the
