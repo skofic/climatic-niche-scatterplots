@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Tree species distribution maps and indicator pair scatterplots for the EUFGIS portal: data pipeline into the GeoService ArangoDB database.",
+  "description": "Tree species distribution maps and climatic niche scatterplots for the EUFGIS portal: data pipeline into the GeoService ArangoDB database.",
   "license": "Apache-2.0",
   "engines": { "node": ">=20" },
   "scripts": {

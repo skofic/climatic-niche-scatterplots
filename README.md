@@ -1,6 +1,6 @@
-# Indicator pair scatterplots
+# Climatic niche scatterplots
 
-Tree species **distribution maps** and **indicator pair scatterplots** for the
+Tree species **distribution maps** and **climatic niche scatterplots** for the
 [EUFGIS](http://www.eufgis.org) portal, the European information system on forest gene
 conservation units (GCUs), developed within the [FORGENIUS](https://www.forgenius.eu) project.
 
