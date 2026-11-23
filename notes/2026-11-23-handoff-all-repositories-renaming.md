@@ -21,12 +21,12 @@ unchanged. Already done by this session: `../shared/deployments.md`, `../shared/
 `indicator-pair-scatterplots` project". Please change the name to `climatic-niche-scatterplots`; nothing
 else on the page depends on it.
 
-## 2. The theme title (`metadata-store`, Milko's word)
+## 2. The theme title (`metadata-store`): kept
 
 `std_dataset_theme_scatterplot` has the title *Indicator-pair scatterplots* and a definition and
 description that speak of "the indicator-pair scatterplots". These name the **product** (the plots of one
 indicator against another), not the repository, so nothing breaks if they stay. Whether the product's
-name follows the repositories' is Milko's decision; this session asks him and he will say which.
+name follows the repositories' was Milko's decision: **keep the title and the texts as they are** (2026-11-23). Nothing to do.
 
 ## 3. One dated line in `CLAUDE.md` (all three)
 
