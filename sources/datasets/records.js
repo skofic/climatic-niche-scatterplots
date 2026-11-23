@@ -17,7 +17,7 @@ const CITE = {
   worldclim: 'Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate surfaces for global land areas. [International Journal of Climatology 37 (12): 4302-4315](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/joc.5086).',
   chelsa: "Karger, D.N., Conrad, O., Böhner, J., Kawohl, T., Kreft, H., Soria-Auza, R.W., Zimmermann, N.E., Linder, H.P., Kessler, M. (2017): Climatologies at high resolution for the Earth's land surface areas. *Scientific Data* 4:170122. [https://doi.org/10.1038/sdata.2017.122](https://doi.org/10.1038/sdata.2017.122)",
 }
-const REPO_URL = '[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'
+const REPO_URL = '[climatic-niche-scatterplots on GitHub](https://github.com/skofic/climatic-niche-scatterplots)'
 
 export const RECORDS = [
   {
@@ -169,7 +169,7 @@ RECORDS.push(
       _title: eng("Species of the scatterplots and maps"),
       _definition: eng("Taxa named by the sources of the scatterplots and the maps, by accepted scientific name, with the occurrences, distribution maps and conservation units that exist for each."),
       _description: eng("The list of the 271 taxa named by any source of the scatterplots and the maps. A taxon is identified by its scientific name, with synonyms folded into the accepted name. For each taxon the record states what exists: the number of [EU-Forest](dataset:EU-FOREST_2017) occurrences, and whether there are [EU-Trees4F maps](dataset:EU-TREES4F_MAPS_2022), Atlas maps of [presence](dataset:ATLAS_RPP_2016) and of [suitability](dataset:ATLAS_MHS_2016), and [gene conservation units](dataset:SCATTER_UNITS) that have it as target species.\n\nIt is a catalogue, not geographic data: its extent and scope are those of the data it indexes. The key of a record is not the name, so that UPOV codes can be added later without changing the records that refer to a taxon."),
-      _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
+      _references: { _url: ['[climatic-niche-scatterplots on GitHub](https://github.com/skofic/climatic-niche-scatterplots)'] },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterSpecies'], std_terms: ['species'], std_terms_key: ['species'] },
@@ -181,7 +181,7 @@ RECORDS.push(
       _title: eng("Map layer manifest"),
       _definition: eng("Map files served by the application, one entry per file: species, source, period, scenario and variant, with the projection, licence and citation of the file."),
       _description: eng("The list of the map files the application serves, one record for each file: the [EU-Trees4F suitability maps](dataset:EU-TREES4F_MAPS_2022) for the current and future periods, the Atlas maps of [relative probability of presence](dataset:ATLAS_RPP_2016) and of [maximum habitat suitability](dataset:ATLAS_MHS_2016) at 1 km, and the [range outlines](dataset:ATLAS_CHOROLOGY_2017). The grids are cloud-optimised GeoTIFF files, the outlines GeoJSON.\n\nEach record states the species, the source, the period, the scenario and the variant of the map, then the file, its projection and resolution, its licence and its citation.\n\nIt is a catalogue of files, not geographic data itself."),
-      _references: { _url: ['[indicator-pair-scatterplots on GitHub](https://github.com/skofic/indicator-pair-scatterplots)'] },
+      _references: { _url: ['[climatic-niche-scatterplots on GitHub](https://github.com/skofic/climatic-niche-scatterplots)'] },
     },
     std_dataset_domn: { std_dataset_extent: 'std_dataset_extent_region', std_dataset_scope: 'std_dataset_scope_grid', std_dataset_theme: 'std_dataset_theme_scatterplot' },
     std_dataset_prop: { _collection_list: ['ScatterMaps'], std_terms: ['species'], std_terms_key: ['species'] },

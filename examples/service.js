@@ -1,4 +1,4 @@
-// Svc — the panes' access to their Foxx service (indicator-pair-scatterplots-service, mounted in GeoService at /panes).
+// Svc — the panes' access to their Foxx service (climatic-niche-service, mounted in GeoService at /panes).
 // Every call names its parameters by the dictionary terms of ui_layout_state and gets answers in the same vocabulary;
 // the large answers (base layer, species cells) are cached by the browser through the service's ETag and here in memory.
 // `?api=<base url>` points at another instance (the portal's).
