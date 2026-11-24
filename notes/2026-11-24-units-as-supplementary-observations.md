@@ -3,7 +3,8 @@
 Milko's question: do the conservation unit polygons correspond to the observation coordinates, and
 could the units add data to the observation grid of the application? Measured on the laptop's
 `GeoService` (`UnitPolygons` 3 669 polygons, `ScatterUnits`, `ScatterOccurrences` 250 569 cells).
-**Status: measurement done, proposal awaiting Milko's decision; nothing built.**
+**Status: measurement done; Milko agreed on 2026-11-24 to proceed in steps, each after his go: first the
+comparison of area and reference point (done, see the note linked in §2), then caveats, stored facts, layer.**
 
 A point of wording: the observations are **EU-Forest** (inventory plots at 1 km cell centres);
 EU-Trees4F supplies the climate and the modelled maps.
@@ -63,10 +64,15 @@ never loaded.
    define that climate can no longer be at its edge.
 2. **The base layer is a sample.** "All surveyed plots" is a roughly even sample of forest climate; units
    are placed by choice.
-3. **A polygon is not an observation.** The shape is an area of conservation, not a statement that the
-   species grows everywhere in it (Milko: nothing forbids a shape from holding a supermarket). The
-   **climate reference point** is the unit's place for this purpose, as it already is in the
-   scatterplot; its distance from the polygon is already checked (`gcu_loc_climate_distance`).
+3. **Neither the polygon nor the reference point is an observation** (corrected the same day after
+   Milko's caution). The polygon is the border of the area in which the conservation activities are
+   performed; it does not say where in it a species grows (nothing forbids a shape from holding a
+   supermarket). The reference point is chosen by the unit's manager: after a study, or where the
+   surveyors park; for Austria's restricted units it is the nearest village. What EUFGIS states is
+   only this: *the species is a conservation target in this area* — today most likely a population
+   living there, in future possibly an introduced one. The supplement claims no more than that. How
+   far the point's climate is from the area's is measured in
+   [`2026-11-24-units-area-climate-vs-reference-point.md`](2026-11-24-units-area-climate-vs-reference-point.md).
 4. **"Other species"** carry no qualification and are left out, even if loaded later.
 
 ## 3. A finding about the application as it is
@@ -84,15 +90,15 @@ adds is **the statement of what a dot means**. Today:
 ## 4. Proposal: a marked addition, three parts
 
 **(a) Two facts per unit and target species, stored in `ScatterUnits`.** The distance from the unit's
-reference point to the nearest surveyed cell (any species), and to the nearest observation of each
+polygon (as in §1; not from the reference point) to the nearest surveyed cell (any species), and to the nearest observation of each
 target species; from them a flag "outside the observations" above a threshold. Computed by a script
 like `sources/units/distance.js`. Restricted units keep the flag only, never a distance that could
 help locate them.
 
 **(b) In the scatterplot, a supplementary species layer.** For the chosen species, the flagged units
 are drawn a second time as presence points with their own mark and legend entry, worded as an
-addition: *"Conservation units outside the EU-Forest observations (EUFGIS, added by this
-application)"*. Rules: never part of the base layer, never part of the envelope, switched like any
+addition: *"Areas where the species is under conservation, outside the EU-Forest observations (EUFGIS,
+added by this application)"*. Rules: never part of the base layer, never part of the envelope, switched like any
 layer. For the 26 species without observations it is the only species evidence, and makes them
 choosable for the scatterplot. No envelope is drawn from units (28 points do not make a
 highest-density region; and it would be circular).
