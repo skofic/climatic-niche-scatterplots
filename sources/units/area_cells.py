@@ -7,6 +7,9 @@ intersects with the share of the polygon's area in each, and computes the same a
 EU-Trees4F historical rasters next to the value at the reference point.
 
 Input:  work/units-geometry.jsonl (sources/units/distance.js: key, point, geometry, restricted; never leaves this machine)
+Also written, in the shape of the point samplers so that the units loader reads them the same way:
+        work/climate-units-area-eutrees4f.jsonl {key, values} and work/climate-units-area-eutrees4f-future.jsonl
+        {key, values: {period: {rcp: {...}}}} (area-weighted means, raster units).
 Output: work/units-area-cells.jsonl  {key, point_cell: [i, j], cells: [[i, j, weight], ...]}   (i, j = 30" grid indices
         from (-180, -90), the convention of lib/geometry.js) and work/units-area-eutrees4f.jsonl {key, point: {...}, area: {...}, n}
 Usage:  .venv/bin/python -I sources/units/area_cells.py
@@ -45,10 +48,20 @@ for fn, ind in RASTERS.items():
 H, W = next(iter(layers.values())).shape
 # EU-Trees4F stores temperatures x 10 and seasonal precipitation as three-month totals (config/indicators.js applies the
 # scaling at load); here point and area are compared in the raster's own units and scaled by the reader of the output.
+FDIR = DIR.replace('/historical', '/future/ensemble')
+FVARS = {'bio1': 'bio01', 'bio12': 'bio12', 'bio15': 'bio15', 'ci': 'continentality', 'ps': 'pr_summer', 'pw': 'pr_winter', 'ts': 'tas_summer'}
+future = {}   # (period, rcp, indicator) -> (transform, array); the future rasters are cropped by a row and a column, so each keeps its own transform
+for period in ['1991-2020', '2021-2050', '2051-2080']:
+    for rcp in ['rcp45', 'rcp85']:
+        for var, ind in FVARS.items():
+            with rasterio.open(f'{FDIR}/{var}_ensemble_mean_{rcp}_{period}.tif') as ds:
+                arr = ds.read(1).astype('float64'); arr[arr == ds.nodata] = np.nan
+                future[(period, rcp, ind)] = (ds.transform, arr)
+hist_out = open('work/climate-units-area-eutrees4f.jsonl', 'w'); fut_out = open('work/climate-units-area-eutrees4f-future.jsonl', 'w')
 cells_out = open('work/units-area-cells.jsonl', 'w'); t4_out = open('work/units-area-eutrees4f.jsonl', 'w')
 n = 0
 for line in open('work/units-geometry.jsonl'):
-    u = json.loads(line); g = shape(u['geometry'])
+    u = json.loads(line); g = shape(u['geometry']); fcover = {}
     if not g.is_valid: g = make_valid(g)
     lon, lat = u['point']['coordinates']
     c30 = cover(g, -180, -90, STEP)
@@ -67,5 +80,17 @@ for line in open('work/units-geometry.jsonl'):
         area[ind] = round(sum(v * w for v, w in vals) / sum(w for _, w in vals), 4) if vals else None
         v = at(pc, pr, ind); pt[ind] = None if math.isnan(v) else round(float(v), 4)
     t4_out.write(json.dumps({'key': u['key'], 'point': pt, 'area': area, 'n': len(c5), 'same_cell': len(c5) == 1 and c5[0][:2] == (pc, pr)}) + '\n')
+    # the same area means in the shape of the point samplers (sources/climate/eutrees4f/sample*.py), for the loader
+    hist_out.write(json.dumps({'key': u['key'], 'values': {k: v for k, v in area.items() if v is not None}}) + '\n')
+    fut = {}
+    for (period, rcp, ind), (ftf, farr) in future.items():
+        fh, fw = farr.shape; ck = (ftf.c, ftf.f, ftf.a, fh)
+        if ck not in fcover: fcover[ck] = cover(g, ftf.c, ftf.f - fh * ftf.a, ftf.a)
+        vals = []
+        for i, j, w in fcover[ck]:
+            r = fh - 1 - j
+            if 0 <= r < fh and 0 <= i < fw and not math.isnan(farr[r, i]): vals.append((farr[r, i], w))
+        if vals: fut.setdefault(period, {}).setdefault(rcp, {})[ind] = round(sum(v * w for v, w in vals) / sum(w for _, w in vals), 4)
+    fut_out.write(json.dumps({'key': u['key'], 'values': fut}) + '\n')
     n += 1
 print(f'{n} units', file=sys.stderr)
