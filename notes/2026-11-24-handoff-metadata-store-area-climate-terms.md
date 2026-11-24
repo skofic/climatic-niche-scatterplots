@@ -3,7 +3,7 @@
 **From:** the `climatic-niche-scatterplots` session. **To:** `metadata-store`. Carried by Milko.
 Written after reading `../shared/Terms and User Interface/Guidelines - terms for the user interface.md`
 (no rule of the guidelines changes in this round).
-**Status: draft. §4 waits for Milko's answer (one flag or two); carry the note after that.**
+**Status: ready to carry. §4 decided by Milko on 2026-11-24: the climate flag replaces the distance flag.**
 
 ## 1. Why
 
@@ -74,8 +74,7 @@ _data:       _scalar._number_integer, unit metres (as geo_shape_elevation), may 
 - `gcu_loc_climate`, `_issues`: add that the point is chosen by the unit's manager and that the
   [climate of the unit's area](gcu_loc_climate_area.md) is stored beside it; the panes flag the units
   where the two differ.
-- `gcu_loc_climate_distance`, `_description`: the last sentence ("The panes flag a unit whose distance
-  exceeds the flag distance") follows §4.
+- `gcu_loc_climate_distance`, `_description`: see §4.
 
 ## 3. Controls: the two thresholds
 
@@ -125,18 +124,23 @@ Binds:       new key (state, remembered in the browser)
 ```
 
 ### ui_layout_state                           (exists: change)
-Add the two controls as `_fields` (main group, where `gcu_loc_climate_flag` is) with the constants
-0.5 and 5. Whether `gcu_loc_climate_flag` stays a field: §4.
+Add the two controls as `_fields` (main group, in the place of `gcu_loc_climate_flag`, which leaves: §4)
+with the constants 0.5 and 5. Examples that carry `gcu_loc_climate_flag` follow.
 
-## 4. Open, for Milko: what becomes of the distance flag
+## 4. The distance flag is replaced (Milko, 2026-11-24)
 
-Proposed: **the climate flag replaces the distance flag on the bars.** One warning, with one meaning:
-the reference point's climate is not the area's. The distance stays a stored fact
+**The climate flag replaces the distance flag on the bars.** One warning, with one meaning: the
+reference point's climate is not the area's. The distance stays a stored fact
 (`gcu_loc_climate_distance`) and is stated in the unit's hover window. Of the 46 units beyond 5 km,
-38 are flagged by climate as well; the other 8 have a distant point with the same climate. If
-accepted: `gcu_loc_climate_flag` keeps its term (a namespace now; its description says the panes no
-longer offer it) and leaves `ui_layout_state`. If both flags are kept: nothing changes on it, and the
-two marks need distinct drawings.
+38 are flagged by climate as well; the other 8 have a distant point with the same climate.
+
+- `gcu_loc_climate_flag` (exists: change): it is no longer a control of the panes. Please keep the
+  term as the namespace of the two thresholds, reword it accordingly (title e.g. *Climate flag*; the
+  flag and its two thresholds; no form-field sentence), and decide whether it keeps a `_data` section
+  and the control role. It **leaves `ui_layout_state`** (field and constant 5).
+- `gcu_loc_climate_distance`, `_description`: the last sentence becomes "The panes state it in the
+  unit's hover window; the flag is read from the climate, see the
+  [climate of the unit's area](gcu_loc_climate_area.md)." Its `_notes` count stays.
 
 ## 5. Labels
 
@@ -173,7 +177,7 @@ _description:The dot is the unit at its [reference point](gcu_loc_climate.md); t
 ```
 
 ### ui_layout_label_flagged                    (exists: change)
-Its texts should speak of the climate difference, not of the distance, if §4 is accepted.
+Its texts speak of the climate difference, not of the distance (§4).
 
 ## 6. Manual page `using/map-and-scatterplot`
 
