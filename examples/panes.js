@@ -220,3 +220,16 @@ window.Store = {
   load(page, keys) { try { const o = JSON.parse(localStorage.getItem(`panes:${page}`)) || {}; return keys ? Object.fromEntries(Object.entries(o).filter(([k]) => keys.includes(k))) : o } catch { return {} } },
   save(page, state, keys, extra = {}) { try { localStorage.setItem(`panes:${page}`, JSON.stringify({ ...Object.fromEntries(keys.filter((k) => state[k] !== undefined).map((k) => [k, state[k]])), ...extra })) } catch {} },
 }
+
+// ---- the climate flag (2026-11-24; replaces the distance flag): a unit is flagged when, on the selected climate source's
+// reference period, the climate of its area differs from the climate at its reference point by more than one of two
+// thresholds. The service gives the two differences per dataset under gcu_loc_climate_flag: { "<dataset key>": [°C, %] }.
+window.Flag = (() => {
+  const T = 'gcu_loc_climate_flag_temperature', P = 'gcu_loc_climate_flag_precipitation', KEY = 'gcu_loc_climate_flag', DS = 'std_dataset_ids'
+  const uT = () => Dict.unit(T) || '°C', uP = () => Dict.unit(P) || '%'
+  const diff = (f, state) => (f && f[[].concat(state[DS] ?? [])[0]]) || null
+  const on = (f, state) => { const d = diff(f, state); return !!d && (d[0] > Number(state[T]) || (d[1] != null && d[1] > Number(state[P]))) }
+  const text = (f, state) => { const d = diff(f, state); return d ? `${d[0].toFixed(1)} ${uT()}${d[1] != null ? ` · ${Math.round(d[1])} ${uP()}` : ''}` : '' }
+  const rule = (state) => `> ${state[T]} ${uT()} / ${state[P]} ${uP()}`
+  return { T, P, KEY, DS, diff, on, text, rule }
+})()

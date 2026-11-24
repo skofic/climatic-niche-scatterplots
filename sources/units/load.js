@@ -4,6 +4,8 @@
 // only: no point, no cell key.   Usage: node sources/units/load.js [--dry-run] [--on-missing drop|fail]
 // Inputs: work/units.jsonl (sources/units/export.js), work/climate-units-eutrees4f.jsonl and
 //         work/climate-units-eutrees4f-future.jsonl (sources/climate/eutrees4f/sample*.py --in work/units.jsonl),
+//         work/climate-units-area-eutrees4f*.jsonl and work/units-area.jsonl if present (sources/units/area_cells.py, area.js)
+//         → gcu_loc_climate_area, gcu_loc_climate_elevation
 //         work/units-distance.jsonl if present (sources/units/distance.js) → gcu_loc_climate_distance
 import { readFileSync, existsSync } from 'node:fs'
 import { connect, loadCredentials, explain } from '../../lib/db.js'
@@ -15,12 +17,13 @@ import { GID, SOURCES } from '../../config/indicators.js'
 import { fetchCells } from '../climate/geoservice/lookup.js'
 import { ensureDatasetRecords, datasetGids } from '../datasets/records.js'
 
+const AREA = 'gcu_loc_climate_area', ELEV = 'gcu_loc_climate_elevation'   // the climate over the unit's polygon and the elevation at its reference point (terms of 2026-11-24)
 const dryRun = process.argv.includes('--dry-run')
 const onMissing = process.argv.includes('--on-missing') ? process.argv[process.argv.indexOf('--on-missing') + 1] : 'drop'
 const lines = (f) => existsSync(f) ? readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []
 try {
   const creds = loadCredentials(); const { db, collections } = connect(creds, { requireLoadTarget: !dryRun })
-  const wanted = occurrenceGids(); const extra = ['gcu_id_number', 'gcu_loc_coordinates-restriction', 'gcu_loc_climate', 'gcu_loc_climate_distance']
+  const wanted = occurrenceGids(); const extra = ['gcu_id_number', 'gcu_loc_coordinates-restriction', 'gcu_loc_climate', 'gcu_loc_climate_distance', AREA, ELEV]
   const { dictionary, missing: allMissing } = await loadDictionary([...wanted, ...extra, ...datasetGids()], creds)
   const missing = allMissing.filter((g) => wanted.includes(g) || extra.includes(g))
   if (missing.length) { console.log(`  not in the dictionary: ${missing.join(', ')}`); if (onMissing === 'fail') throw new Error('missing terms') }
@@ -31,6 +34,10 @@ try {
   const t4fH = new Map(lines('work/climate-units-eutrees4f.jsonl').map((l) => [l.key, l.values]))
   const t4fF = new Map(lines('work/climate-units-eutrees4f-future.jsonl').map((l) => [l.key, l.values]))
   const distance = new Map(lines('work/units-distance.jsonl').map((l) => [l.key, l.km]))   // sources/units/distance.js, kept across reloads
+  // the area's climate: sources/units/area_cells.py (EU-Trees4F, raster units like the point samples) and sources/units/area.js (1 km grids, already gids)
+  const areaH = new Map(lines('work/climate-units-area-eutrees4f.jsonl').map((l) => [l.key, l.values]))
+  const areaF = new Map(lines('work/climate-units-area-eutrees4f-future.jsonl').map((l) => [l.key, l.values]))
+  const area = new Map(lines('work/units-area.jsonl').map((l) => [l.key, l]))
   const keyOf = new Map(units.map((u) => [u.key, containingCellKey(u.lon, u.lat)]))
   const cellKeys = [...new Set(keyOf.values())]
 
@@ -76,9 +83,16 @@ try {
     if (t4) { doc.properties.eutrees4f = t4; if (keys['EU-TREES4F_PREDICTORS_2022']) ids.add(keys['EU-TREES4F_PREDICTORS_2022']) }
     const cell = cached.get(keyOf.get(u.key))
     if (cell) for (const src of ['worldclim', 'chelsa']) if (cell.properties?.[src]) { doc.properties[src] = { ...(u.restricted ? {} : { geometry_hash: cell._key }), ...cell.properties[src] }; ids.add(SOURCES[src].datasetKey) }
+    const a = area.get(u.key), ap = {}
+    if (areaH.get(u.key) && Object.keys(areaH.get(u.key)).length) ap[SOURCES.eutrees4f.period] = areaH.get(u.key)
+    Object.assign(ap, areaF.get(u.key) ?? {})
+    const at4 = Object.keys(ap).length ? climateBlock('eutrees4f', { periods: ap }) : null
+    const areaDoc = { ...(at4 ? { eutrees4f: at4 } : {}), ...(a?.properties ?? {}) }
+    if (Object.keys(areaDoc).length) doc[AREA] = areaDoc
+    if (typeof a?.elevation?.point === 'number') doc[ELEV] = Math.round(a.elevation.point)
     doc.std_dataset_ids = [...ids]
-    dropGids(doc, missing)
-    const { errors } = checkDocument(doc, dictionary, report, { skip, leafGids })
+    dropGids(doc, missing, [AREA])
+    const { errors } = checkDocument(doc, dictionary, report, { skip, leafGids, containers: [AREA] })
     if (errors.length) { invalid++; if (invalid <= 3) console.log('  invalid:', doc._key, JSON.stringify(errors[0])) }
     docs.push(doc)
   }

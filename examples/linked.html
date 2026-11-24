@@ -34,7 +34,7 @@
   </span>
   <span class="group"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
     <label><span data-term="gcu_loc_coordinates-restriction_level"></span> <select data-key="gcu_loc_coordinates-restriction_level"></select></label>
-    <label><span data-term="gcu_loc_climate_flag"></span> &gt; <select data-key="gcu_loc_climate_flag"><option>1</option><option>2</option><option>5</option><option>10</option><option>20</option></select> km</label>
+    <label><span data-term="ui_layout_label_flag-climate"></span> &gt; <select data-key="gcu_loc_climate_flag_temperature"><option>0.25</option><option>0.5</option><option>1</option><option>2</option></select> °C / <select data-key="gcu_loc_climate_flag_precipitation"><option>2</option><option>5</option><option>10</option><option>20</option></select> %</label>
   </span>
   <!-- the selected units (option-click on either pane): the count, which units both panes draw, clear -->
   <span class="group"><span class="cap" data-term="ui_layout_units_selection"></span><span id="selCount">0</span>
@@ -56,19 +56,19 @@
 <script src="service.js"></script>
 <script>
 const $ = (id) => document.getElementById(id), $K = (k) => document.querySelector(`[data-key="${k}"]`)
-const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', level: 'gcu_loc_coordinates-restriction_level', flag: 'gcu_loc_climate_flag', mode: 'ui_layout_mode', placement: 'ui_layout_map_placement', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode', sel: 'ui_layout_map_selection' }
-const SHARED = [K.species, K.country, K.unit, K.level, K.flag, K.selection, K.unitsMode]   // what the panes receive
+const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', level: 'gcu_loc_coordinates-restriction_level', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', mode: 'ui_layout_mode', placement: 'ui_layout_map_placement', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode', sel: 'ui_layout_map_selection' }
+const SHARED = [K.species, K.country, K.unit, K.level, K.flagT, K.flagP, K.selection, K.unitsMode]   // what the panes receive
 const E = (root, ...lids) => lids.map((l) => `${root}_${l}`)
 const OPT = { [K.level]: E('gcu_loc_coordinates-restriction', 'public', 'value', 'manage'), [K.mode]: E('ui_layout_mode', 'auto', 'side', 'stack'), [K.placement]: E('ui_layout_map_placement', 'page', 'tab', 'window'), [K.unitsMode]: E('ui_layout_units', 'all', 'only', 'hide') }
-const DIST = 'gcu_loc_climate_distance'
+const FLAG = Flag.KEY, DS = Flag.DS   // the climate flag is read on the scatterplot's climate source, which that pane reports
 const last = Dict.last
 let state = {}, cat, ix = [], popup = null
 // the map pane is the iframe, or the detached tab / window while that is open
 const mapW = () => (popup && !popup.closed ? popup : $('map').contentWindow), scatterW = () => $('scatter').contentWindow
-const REMEMBER = [K.flag, K.unitsMode]
-function send(keys = SHARED) { const msg = { type: 'state' }; for (const k of keys) msg[k] = state[k] ?? null; mapW().postMessage(msg, '*'); scatterW().postMessage(msg, '*'); Store.save('host', state, REMEMBER) }
+const REMEMBER = [K.flagT, K.flagP, K.unitsMode]
+function send(keys = SHARED) { const msg = { type: 'state' }; for (const k of keys) msg[k] = state[k] ?? null; mapW().postMessage({ ...msg, [DS]: state[DS] ?? null }, '*'); scatterW().postMessage(msg, '*'); Store.save('host', state, REMEMBER) }
 const match = (u, c, s) => (!c || u.gcu_id_number.startsWith(c)) && (!s || u.species_list.includes(s))
-const flag = (u) => u[DIST] != null && u[DIST] > state[K.flag]
+const flag = (u) => Flag.on(u[FLAG], state)
 const flagsOf = (s) => cat.species.find((x) => x.species === s)
 /** the filter as chips: the species, the country and the unit, each removable; nothing chosen = the hint on the search box */
 function refill() {
@@ -78,7 +78,7 @@ function refill() {
   $('q').classList.toggle('hint', !species && !state[K.country] && !state[K.unit])
   $('chips').innerHTML = (species ? chip(species, K.species, T('ui_layout_label_species')) : '') + (state[K.country] ? chip(T(state[K.country]), K.country, T('ui_layout_label_country')) : '') + (state[K.unit] ? chip(state[K.unit], K.unit, T('ui_layout_label_unit')) : '')
   for (const x of $('chips').querySelectorAll('.x')) x.addEventListener('click', () => { state[x.dataset.clear] = null; if (x.dataset.clear === K.country) state[K.unit] = null; refill(); send() })   // clearing the species keeps the country and the unit: they stand on their own now
-  const nf = sel.filter(flag).length; $('info').textContent = `${sel.length} ${T('ui_layout_label_unit').toLowerCase()}s · ${sel.filter((u) => u['gcu_loc_coordinates-restriction']).length} ${T('ui_layout_label_restricted')}${nf ? ` · ⚠ ${nf}` : ''} · ● ${T('ui_layout_map_label_presence')} · ▦ ${T('ui_layout_scatterplot')}`; $('info').title = `⚠ = ${T('ui_layout_label_flagged')} (> ${state[K.flag]} km)`
+  const nf = sel.filter(flag).length; $('info').textContent = `${sel.length} ${T('ui_layout_label_unit').toLowerCase()}s · ${sel.filter((u) => u['gcu_loc_coordinates-restriction']).length} ${T('ui_layout_label_restricted')}${nf ? ` · ⚠ ${nf}` : ''} · ● ${T('ui_layout_map_label_presence')} · ▦ ${T('ui_layout_scatterplot')}`; $('info').title = `⚠ = ${T('ui_layout_label_flagged')} (${Flag.rule(state)})`
 }
 /** suggestions for what is typed: species (name), countries (name or code), units (number), each group capped */
 function suggest(q) {
@@ -103,9 +103,9 @@ function pick(kind, value) {
   else if (kind === 'unit') { const u = ix.find((x) => x.gcu_id_number === value); state[K.unit] = value; if (u && !u.species_list.includes(state[K.species])) state[K.species] = u.species_list[0]; state[K.country] = 'ISO_3166_1_' + value.slice(0, 3) }
   $('q').value = ''; $('suggest').classList.remove('open'); refill(); send()
 }
-const read = (el) => el.dataset.key === K.flag ? Number(el.value) : (el.value === '' ? null : el.value)
+const read = (el) => [K.flagT, K.flagP].includes(el.dataset.key) ? Number(el.value) : (el.value === '' ? null : el.value)
 const ON = {
-  [K.flag]: () => { refill(); send() }, [K.level]: async () => { ix = await Svc.unitsIndex(state[K.level]); refill(); send() },
+  [K.flagT]: () => { refill(); send() }, [K.flagP]: () => { refill(); send() }, [K.level]: async () => { ix = await Svc.unitsIndex(state[K.level]); refill(); send() },
   [K.mode]: () => { $('panes').className = last(state[K.mode]); stackedFlag() }, [K.placement]: place,
   [K.unitsMode]: () => send([K.unitsMode]),
 }
@@ -128,7 +128,7 @@ const q = new URLSearchParams(location.search)
 const paneUrl = (page, extra = '') => `${page}?embedded=1${['lang', 'dict', 'api'].filter((k) => q.get(k)).map((k) => `&${k}=${encodeURIComponent(q.get(k))}`).join('')}${extra}`
 Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   cat = c
-  // nothing chosen at first: the search box is the first thing to use (Milko, 2026-11-12); the flag distance and the units mode remembered in this browser
+  // nothing chosen at first: the search box is the first thing to use (Milko, 2026-11-12); the flag thresholds and the units mode remembered in this browser
   state = { ...defaults, [K.species]: null, [K.level]: 'gcu_loc_coordinates-restriction_value', [K.selection]: [], ...Store.load('host', REMEMBER) }   // the scatterplot default: restricted units' values are shown
   for (const k of Object.values(K)) if (q.has(k)) state[k] = q.get(k)
   // the restriction level follows the service: its maximum clamps the level, and an instance limited to public shows
@@ -180,6 +180,8 @@ window.addEventListener('message', (e) => {
     else if (e.source === scatterW()) mapW().postMessage({ type: 'state', [K.sel]: null }, '*')
     $('clearGroup').style.display = d[K.sel] ? '' : 'none'
   }
+  // the climate source belongs to the scatterplot; the flag is read on it here and on the map
+  if (DS in d && e.source === scatterW()) { state[DS] = d[DS]; refill(); mapW().postMessage({ type: 'state', [DS]: d[DS] }, '*') }
   // the units selected by option-click, on either pane, are drawn on both; a unit clicked on the map is chosen as in the search box
   if (K.selection in d) { state[K.selection] = d[K.selection] ?? []; $('selCount').textContent = state[K.selection].length; (e.source === mapW() ? scatterW() : mapW()).postMessage({ type: 'state', [K.selection]: state[K.selection] }, '*') }
   if (K.unit in d && (e.source === mapW() || e.source === scatterW()) && (d[K.unit] ?? null) !== (state[K.unit] ?? null)) { state[K.unit] = d[K.unit] ?? null; refill(); send([K.unit]) }
