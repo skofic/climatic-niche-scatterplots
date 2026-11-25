@@ -110,7 +110,9 @@ const selected = (id) => (state[K.selection] ?? []).includes(id)
 const CHOSEN = getComputedStyle(document.documentElement).getPropertyValue('--chosen').trim() || '#00aee6'
 const chosenHalo = new ol.style.Style({ image: new ol.style.Circle({ radius: 10, stroke: new ol.style.Stroke({ color: '#fff', width: 6 }) }), zIndex: 19 })
 const chosenRing = new ol.style.Style({ image: new ol.style.Circle({ radius: 10, stroke: new ol.style.Stroke({ color: CHOSEN, width: 3 }) }), zIndex: 20 })
-const unitsStyle = (f) => { if (f.get('hidden')) return hidden; const id = f.get('gcu_id_number'), s = [flagged(f) ? flagStyle : unitStyle]; if (selected(id)) s.push(selRing); if (id === state[K.unit]) s.push(chosenHalo, chosenRing); return s }
+// the line from the chosen unit's polygon to its reference point, when that point is flagged for distance and out of the framed view
+const linkStyle = new ol.style.Style({ stroke: new ol.style.Stroke({ color: '#b71c1c', width: 1.5 }), zIndex: 18 })
+const unitsStyle = (f) => { if (f.get('link')) return linkStyle; if (f.get('hidden')) return hidden; const id = f.get('gcu_id_number'), s = [flagged(f) ? flagStyle : unitStyle]; if (selected(id)) s.push(selRing); if (id === state[K.unit]) s.push(chosenHalo, chosenRing); return s }
 const units = new ol.layer.Vector({ source: new ol.source.Vector(), style: unitsStyle })
 const picked = new ol.layer.Vector({ source: new ol.source.Vector(), style: unitsStyle })   // the chosen unit's polygon, fetched on demand
 const layers = { rpp, mhs, t4cur, t4fut, choro, units }
@@ -205,7 +207,21 @@ async function goToUnit() {
   const fc = await Svc.unitsGeo(state[K.level], { [K.unit]: state[K.unit], ...manageCountry() })
   if (fc.withheld || !fc.features.length) { $('info').textContent = `${state[K.unit]}: ${Dict.title(LBL.neverOnMap)}`; return }
   const feats = gj.readFeatures(fc); picked.getSource().addFeatures(feats)
-  map.getView().fit(feats[0].getGeometry().getExtent(), { padding: [60, 60, 60, 60], maxZoom: 11, duration: 600 })
+  const view = map.getView(), ext = feats[0].getGeometry().getExtent(), pad = 60
+  // the reference point of a unit flagged for distance may lie far outside the framed polygon (Milko, 2026-11-25): when it
+  // does, a thin line leaves the polygon towards it, so that the point can be found by following the line or zooming out
+  const pt = units.getSource().getFeatures().find((u) => u.get('gcu_id_number') === state[K.unit] && !u.get('hidden'))
+  const km = pt?.get(DIST)
+  if (pt && pt.getGeometry().getType() === 'Point' && feats[0].getGeometry().getType() !== 'Point' && Flag.used(state, Flag.D) && km != null && km > Number(state[Flag.D])) {
+    const [w, h] = map.getSize(), c = ol.extent.getCenter(ext), p = pt.getGeometry().getCoordinates()
+    const res = Math.max(view.getResolutionForExtent(ext, [Math.max(w - 2 * pad, 50), Math.max(h - 2 * pad, 50)]), view.getResolutionForZoom(11))
+    const framed = [c[0] - w * res / 2, c[1] - h * res / 2, c[0] + w * res / 2, c[1] + h * res / 2]
+    if (!ol.extent.containsCoordinate(framed, p)) {
+      const link = new ol.Feature({ ...pt.getProperties(), geometry: new ol.geom.LineString([feats[0].getGeometry().getClosestPoint(p), p]), link: true })
+      picked.getSource().addFeature(link)
+    }
+  }
+  view.fit(ext, { padding: [pad, pad, pad, pad], maxZoom: 11, duration: 600 })
 }
 // ---- controls bound to state keys
 const read = (el) => el.type === 'checkbox' ? el.checked : el.type === 'range' || [K.flagT, K.flagP].includes(el.dataset.key) ? Number(el.value) : (el.value === '' ? null : el.value)
