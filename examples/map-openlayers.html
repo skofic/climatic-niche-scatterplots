@@ -53,7 +53,7 @@
     <span id="searchInfo" class="hints"></span>
   </span>
   <span class="group"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
-    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label>
+    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label><label><input type="checkbox" data-flag-lines checked> <span data-term="ui_layout_units_flag-lines"></span></label>
   </span>
 </div>
 <div id="map"><div id="tip" class="tip"></div></div>
@@ -128,7 +128,7 @@ const basemaps = {
 }
 const HOME = { center: ol.proj.fromLonLat([10, 50], laea), zoom: 4 }
 // what this pane remembers between visits (browser storage): the base map, the layers and their opacities, the EU-Trees4F future shown, the flag thresholds, the units mode — and the view (most users are country managers; Milko, 2026-11-12)
-const REMEMBER = [K.base, ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), K.period, K.scenario, K.variant, K.flagSet, K.flagD, K.flagT, K.flagP, K.unitsMode]
+const REMEMBER = [K.base, ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), K.period, K.scenario, K.variant, K.flagSet, K.flagD, K.flagT, K.flagP, Flag.LINES, K.unitsMode]
 const remember = () => { const v = map.getView(); Store.save('map', state, REMEMBER, { view: { center: v.getCenter(), zoom: v.getZoom() } }) }
 const map = new ol.Map({ target: 'map', layers: [...Object.values(basemaps), ...Object.values(layers), picked, drawn],
   view: new ol.View({ projection: laea, ...HOME }) })
@@ -201,6 +201,8 @@ function updateInfo(sel) {
   Pop.set($('status'), lines.filter(Boolean).join(' · '), state[K.species] ?? T('ui_layout_label_search'))
   remember()
 }
+// the Lines switch: off removes the chosen unit's line to its reference point, on draws it again (the unit is framed anew)
+function linkSync() { const src = picked.getSource(), link = src.getFeatures().find((f) => f.get('link')); if (!Flag.lines(state)) { if (link) src.removeFeature(link) } else if (!link && state[K.unit]) goToUnit() }
 async function goToUnit() {
   picked.getSource().clear()
   if (!state[K.unit]) return
@@ -212,7 +214,7 @@ async function goToUnit() {
   // does, a thin line leaves the polygon towards it, so that the point can be found by following the line or zooming out
   const pt = units.getSource().getFeatures().find((u) => u.get('gcu_id_number') === state[K.unit] && !u.get('hidden'))
   const km = pt?.get(DIST)
-  if (pt && pt.getGeometry().getType() === 'Point' && feats[0].getGeometry().getType() !== 'Point' && Flag.used(state, Flag.D) && km != null && km > Number(state[Flag.D])) {
+  if (pt && pt.getGeometry().getType() === 'Point' && feats[0].getGeometry().getType() !== 'Point' && Flag.lines(state) && Flag.used(state, Flag.D) && km != null && km > Number(state[Flag.D])) {
     const [w, h] = map.getSize(), c = ol.extent.getCenter(ext), p = pt.getGeometry().getCoordinates()
     const res = Math.max(view.getResolutionForExtent(ext, [Math.max(w - 2 * pad, 50), Math.max(h - 2 * pad, 50)]), view.getResolutionForZoom(11))
     const framed = [c[0] - w * res / 2, c[1] - h * res / 2, c[0] + w * res / 2, c[1] + h * res / 2]
@@ -314,6 +316,7 @@ window.addEventListener('message', async (e) => {
   if (K.sel in p && !p[K.sel]) drawn.getSource().clear()
   if (K.selection in p) { units.changed(); picked.changed() }
   syncControls(); applyLayers()
+  if (Flag.LINES in p) linkSync()
   if (Flag.DS in p) { units.changed(); refill() }   // the climate source the flag is read on, reported by the scatterplot through the host
   if (levelChanged) ix = await Svc.unitsIndex(state[K.level])
   if (speciesChanged || levelChanged) await showSpeciesLayers(state[K.species])
@@ -336,7 +339,7 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   if (q.get('settings')) document.body.classList.add('settings')   // the drawing settings open at load (dev and presets)
   ix = await Svc.unitsIndex(state[K.level])
   await Dict.load([...Object.values(K), ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), ...Object.values(OPT).flat(), ...Object.values(LBL), 'ui_layout_map_label_hints', ...c.countries.map((x) => x[K.country]), ...c.climates.filter((k) => k.src === 'eutrees4f').flatMap((k) => [k[K.period], k[K.scenario]]), 'ui_layout_map', 'ui_layout_map_layer', 'ui_layout_label_unit', 'ui_layout_label_flagged', 'ui_layout_label_clear', 'ui_layout_label_species', 'ui_layout_label_country', 'ui_layout_label_reset', 'latitude', 'longitude', DIST, ELEV, ...Flag.TERMS])
-  await Dict.labels(); Pop.shortLabels(); bindControls(); Flag.bind(() => state, () => { refill(); units.changed(); remember() }); syncControls(); applyLayers(); Info.init()
+  await Dict.labels(); Pop.shortLabels(); bindControls(); Flag.bind(() => state, (k) => { if (k === Flag.LINES) linkSync(); refill(); units.changed(); remember() }); syncControls(); applyLayers(); Info.init()
   await showSpeciesLayers(state[K.species])
   $('drawClear').addEventListener('click', () => { drawn.getSource().clear(); state[K.sel] = null; post({ [K.sel]: null }) })
   for (const el of document.querySelectorAll('.legend .tog')) { el.addEventListener('click', () => { if (el.classList.contains('na')) return; state[el.dataset.toggle] = !state[el.dataset.toggle]; syncControls(); applyLayers() }) }   // without a species its layers do not exist: their chips are not switches, and keep their setting for when one is chosen

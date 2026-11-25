@@ -34,7 +34,7 @@
   </span>
   <span class="group"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
     <label><span data-term="gcu_loc_coordinates-restriction_level"></span> <select data-key="gcu_loc_coordinates-restriction_level"></select></label>
-    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label>
+    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label><label><input type="checkbox" data-flag-lines checked> <span data-term="ui_layout_units_flag-lines"></span></label>
   </span>
   <!-- the selected units (option-click on either pane): the count, which units both panes draw, clear -->
   <span class="group"><span class="cap" data-term="ui_layout_units_selection"></span><span id="selCount">0</span>
@@ -57,7 +57,7 @@
 <script>
 const $ = (id) => document.getElementById(id), $K = (k) => document.querySelector(`[data-key="${k}"]`)
 const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', level: 'gcu_loc_coordinates-restriction_level', flagSet: 'gcu_loc_climate_flag', flagD: 'gcu_loc_climate_flag_distance', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', mode: 'ui_layout_mode', placement: 'ui_layout_map_placement', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode', sel: 'ui_layout_map_selection' }
-const SHARED = [K.species, K.country, K.unit, K.level, K.flagSet, K.flagD, K.flagT, K.flagP, K.selection, K.unitsMode]   // what the panes receive
+const SHARED = [K.species, K.country, K.unit, K.level, K.flagSet, K.flagD, K.flagT, K.flagP, Flag.LINES, K.selection, K.unitsMode]   // what the panes receive
 const E = (root, ...lids) => lids.map((l) => `${root}_${l}`)
 const OPT = { [K.level]: E('gcu_loc_coordinates-restriction', 'public', 'value', 'manage'), [K.mode]: E('ui_layout_mode', 'auto', 'side', 'stack'), [K.placement]: E('ui_layout_map_placement', 'page', 'tab', 'window'), [K.unitsMode]: E('ui_layout_units', 'all', 'only', 'hide') }
 const DS = Flag.DS   // the flag's climate criteria are read on the scatterplot's climate source, which that pane reports
@@ -65,7 +65,7 @@ const last = Dict.last
 let state = {}, cat, ix = [], popup = null
 // the map pane is the iframe, or the detached tab / window while that is open
 const mapW = () => (popup && !popup.closed ? popup : $('map').contentWindow), scatterW = () => $('scatter').contentWindow
-const REMEMBER = [K.flagSet, K.flagD, K.flagT, K.flagP, K.unitsMode]
+const REMEMBER = [K.flagSet, K.flagD, K.flagT, K.flagP, Flag.LINES, K.unitsMode]
 function send(keys = SHARED) { const msg = { type: 'state' }; for (const k of keys) msg[k] = state[k] ?? null; mapW().postMessage({ ...msg, [DS]: state[DS] ?? null }, '*'); scatterW().postMessage(msg, '*'); Store.save('host', state, REMEMBER) }
 const match = (u, c, s) => (!c || u.gcu_id_number.startsWith(c)) && (!s || u.species_list.includes(s))
 const flag = (u) => Flag.on(u, state)

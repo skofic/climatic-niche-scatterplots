@@ -230,8 +230,10 @@ window.Store = {
 window.Flag = (() => {
   const SET = 'gcu_loc_climate_flag', D = SET + '_distance', T = SET + '_temperature', P = SET + '_precipitation', KEYS = [D, T, P]
   const DS = 'std_dataset_ids', DIST = 'gcu_loc_climate_distance', EX = 'climate_excess', OFF = 'ui_layout_label_off'
+  const LINES = 'ui_layout_units_flag-lines'   // the switch of the flagged units' lines on both panes: on unless false
   const CHOICES = { [D]: [1, 2, 5, 10, 20, 50], [T]: [0.25, 0.5, 1, 2, 3, 5], [P]: [2, 5, 10, 20, 30, 50] }
-  const TERMS = [SET, ...KEYS, OFF, DIST]
+  const TERMS = [SET, ...KEYS, OFF, DIST, LINES]
+  const lines = (state) => state[LINES] !== false
   const unit = (k) => Dict.unit(k) || { [D]: 'km', [T]: '°C', [P]: '%' }[k]
   const used = (state, k) => (Array.isArray(state[SET]) ? state[SET] : KEYS).includes(k)
   const getter = (u) => (typeof u === 'function' ? u : (k) => u[k])
@@ -247,7 +249,7 @@ window.Flag = (() => {
   const text = (u, state) => why(u, state).join(' · ')
   const rule = (state) => KEYS.filter((k) => used(state, k)).map((k) => `${Dict.title(k)} > ${state[k]} ${unit(k)}`).join(' · ') || Dict.title(OFF)
   /** set every [data-flag] selector from the state */
-  function sync(state) { for (const el of document.querySelectorAll('select[data-flag]')) { const k = el.dataset.flag; el.value = used(state, k) && state[k] != null ? String(state[k]) : 'off' } }
+  function sync(state) { for (const el of document.querySelectorAll('input[data-flag-lines]')) el.checked = lines(state); for (const el of document.querySelectorAll('select[data-flag]')) { const k = el.dataset.flag; el.value = used(state, k) && state[k] != null ? String(state[k]) : 'off' } }
   /** fill the [data-flag] selectors (the offered values and Off) and bind them: a value sets the threshold and puts the
    *  criterion in the set, Off takes it out and keeps the number. `getState` returns the page's state object. */
   function bind(getState, onChange) {
@@ -259,10 +261,11 @@ window.Flag = (() => {
       el.addEventListener('change', () => {
         const state = getState(), set = new Set(Array.isArray(state[SET]) ? state[SET] : KEYS)
         if (el.value === 'off') set.delete(k); else { state[k] = Number(el.value); set.add(k) }
-        state[SET] = KEYS.filter((x) => set.has(x)); onChange()
+        state[SET] = KEYS.filter((x) => set.has(x)); onChange(k)
       })
     }
+    for (const el of document.querySelectorAll('input[data-flag-lines]')) el.addEventListener('change', () => { getState()[LINES] = el.checked; onChange(LINES) })
     sync(getState())
   }
-  return { SET, D, T, P, KEYS, DS, DIST, EX, TERMS, used, why, on, text, rule, sync, bind }
+  return { SET, D, T, P, KEYS, DS, DIST, EX, LINES, TERMS, lines, used, why, on, text, rule, sync, bind }
 })()

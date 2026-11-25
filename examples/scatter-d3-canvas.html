@@ -69,7 +69,7 @@
   </span>
   <span class="group host"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
     <label><span data-term="gcu_loc_coordinates-restriction_level"></span> <select data-key="gcu_loc_coordinates-restriction_level"></select></label>
-    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label>
+    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label><label><input type="checkbox" data-flag-lines checked> <span data-term="ui_layout_units_flag-lines"></span></label>
   </span>
   <span class="group host"><span class="cap" data-term="ui_layout_units_selection"></span>
     <span id="selCount">0</span> <select data-key="ui_layout_units_mode"></select> <button id="selClear" data-term="ui_layout_label_clear"></button>
@@ -104,7 +104,7 @@ const K = {
 }
 const E = (root, ...lids) => lids.map((l) => `${root}_${l}`)   // the elements of an enumeration, in display order
 // what this pane remembers between visits (browser storage): the climate, the pair, the views and every drawing setting — not the filter, the selections or the zoom
-const REMEMBER = [K.dataset, K.period, K.scenario, K.X, K.Y, K.view, K.variant, K.position, K.bin, K.binMin, K.baseMode, K.baseOp, K.basePos, K.speciesMode, K.speciesOp, K.envelope, K.unitsMode, K.unitsOp, K.radius, K.arrows, K.flagSet, K.flagD, K.flagT, K.flagP, K.cursor]
+const REMEMBER = [K.dataset, K.period, K.scenario, K.X, K.Y, K.view, K.variant, K.position, K.bin, K.binMin, K.baseMode, K.baseOp, K.basePos, K.speciesMode, K.speciesOp, K.envelope, K.unitsMode, K.unitsOp, K.radius, K.arrows, K.flagSet, K.flagD, K.flagT, K.flagP, Flag.LINES, K.cursor]
 const OPT = {
   [K.view]: E('ui_layout_scatterplot_view', 'layer', 'classes'),
   [K.baseMode]: E('ui_layout_scatterplot_base', 'point', 'hex', 'none'),
@@ -331,7 +331,7 @@ function draw() {
   ctx.strokeStyle = '#b71c1c'; let nFlag = 0
   for (const u of vis) if (flagged(u)) {
     nFlag++; const q = unitPos(u), a = areaPos(u)
-    if (a) { ctx.setLineDash([]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x(q[0]), y(q[1])); ctx.lineTo(x(a[0]), y(a[1])); ctx.stroke(); ctx.beginPath(); ctx.arc(x(a[0]), y(a[1]), 2.5, 0, 2 * Math.PI); ctx.stroke() }
+    if (a && Flag.lines(state)) { ctx.setLineDash([]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x(q[0]), y(q[1])); ctx.lineTo(x(a[0]), y(a[1])); ctx.stroke(); ctx.beginPath(); ctx.arc(x(a[0]), y(a[1]), 2.5, 0, 2 * Math.PI); ctx.stroke() }
     ctx.setLineDash([3, 2]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x(q[0]), y(q[1]), 8, 0, 2 * Math.PI); ctx.stroke()
   }
   ctx.setLineDash([])
