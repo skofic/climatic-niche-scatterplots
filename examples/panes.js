@@ -221,15 +221,48 @@ window.Store = {
   save(page, state, keys, extra = {}) { try { localStorage.setItem(`panes:${page}`, JSON.stringify({ ...Object.fromEntries(keys.filter((k) => state[k] !== undefined).map((k) => [k, state[k]])), ...extra })) } catch {} },
 }
 
-// ---- the climate flag (2026-11-24; replaces the distance flag): a unit is flagged when, on the selected climate source's
-// reference period, the climate of its area differs from the climate at its reference point by more than one of two
-// thresholds. The service gives the two differences per dataset under gcu_loc_climate_flag: { "<dataset key>": [°C, %] }.
+// ---- the reference point flag (2026-11-25; first built 2026-11-24 as a comparison with the area's mean). A unit is flagged
+// when any criterion in use is met: its reference point lies farther from its polygon than the distance threshold, or the
+// climate at the point lies outside the minimum–maximum range found over the unit's area by more than the temperature or the
+// precipitation threshold, on the selected climate source's reference period. The service gives the two excesses per dataset
+// under `climate_excess`: { "<dataset key>": [°C, %] } (0 within the range). State: gcu_loc_climate_flag is the SET of the
+// criteria in use (its elements are the three threshold terms); a criterion left out is off and keeps its number.
 window.Flag = (() => {
-  const T = 'gcu_loc_climate_flag_temperature', P = 'gcu_loc_climate_flag_precipitation', KEY = 'gcu_loc_climate_flag', DS = 'std_dataset_ids'
-  const uT = () => Dict.unit(T) || '°C', uP = () => Dict.unit(P) || '%'
-  const diff = (f, state) => (f && f[[].concat(state[DS] ?? [])[0]]) || null
-  const on = (f, state) => { const d = diff(f, state); return !!d && (d[0] > Number(state[T]) || (d[1] != null && d[1] > Number(state[P]))) }
-  const text = (f, state) => { const d = diff(f, state); return d ? `${d[0].toFixed(1)} ${uT()}${d[1] != null ? ` · ${Math.round(d[1])} ${uP()}` : ''}` : '' }
-  const rule = (state) => `> ${state[T]} ${uT()} / ${state[P]} ${uP()}`
-  return { T, P, KEY, DS, diff, on, text, rule }
+  const SET = 'gcu_loc_climate_flag', D = SET + '_distance', T = SET + '_temperature', P = SET + '_precipitation', KEYS = [D, T, P]
+  const DS = 'std_dataset_ids', DIST = 'gcu_loc_climate_distance', EX = 'climate_excess', OFF = 'ui_layout_label_off'
+  const CHOICES = { [D]: [1, 2, 5, 10, 20, 50], [T]: [0.25, 0.5, 1, 2, 3, 5], [P]: [2, 5, 10, 20, 30, 50] }
+  const TERMS = [SET, ...KEYS, OFF, DIST]
+  const unit = (k) => Dict.unit(k) || { [D]: 'km', [T]: '°C', [P]: '%' }[k]
+  const used = (state, k) => (Array.isArray(state[SET]) ? state[SET] : KEYS).includes(k)
+  const getter = (u) => (typeof u === 'function' ? u : (k) => u[k])
+  /** the criteria a unit meets, as texts ("12.0 km", "1.3 °C", "8 %"); `u` is a unit object or a property getter */
+  function why(u, state) {
+    const g = getter(u), ex = (g(EX) ?? {})[[].concat(state[DS] ?? [])[0]] ?? null, km = g(DIST), r = []
+    if (used(state, D) && km != null && km > Number(state[D])) r.push(`${km.toFixed(1)} ${unit(D)}`)
+    if (ex && used(state, T) && ex[0] > Number(state[T])) r.push(`${ex[0].toFixed(1)} ${unit(T)}`)
+    if (ex && used(state, P) && ex[1] != null && ex[1] > Number(state[P])) r.push(`${Math.round(ex[1])} ${unit(P)}`)
+    return r
+  }
+  const on = (u, state) => why(u, state).length > 0
+  const text = (u, state) => why(u, state).join(' · ')
+  const rule = (state) => KEYS.filter((k) => used(state, k)).map((k) => `${Dict.title(k)} > ${state[k]} ${unit(k)}`).join(' · ') || Dict.title(OFF)
+  /** set every [data-flag] selector from the state */
+  function sync(state) { for (const el of document.querySelectorAll('select[data-flag]')) { const k = el.dataset.flag; el.value = used(state, k) && state[k] != null ? String(state[k]) : 'off' } }
+  /** fill the [data-flag] selectors (the offered values and Off) and bind them: a value sets the threshold and puts the
+   *  criterion in the set, Off takes it out and keeps the number. `getState` returns the page's state object. */
+  function bind(getState, onChange) {
+    for (const el of document.querySelectorAll('select[data-flag]')) {
+      const k = el.dataset.flag; el.innerHTML = ''
+      for (const v of CHOICES[k]) el.add(new Option(`${v} ${unit(k)}`, String(v)))
+      const off = new Option(Dict.title(OFF), 'off'); off.title = Dict.def(OFF); el.add(off)
+      el.title = Dict.def(k)
+      el.addEventListener('change', () => {
+        const state = getState(), set = new Set(Array.isArray(state[SET]) ? state[SET] : KEYS)
+        if (el.value === 'off') set.delete(k); else { state[k] = Number(el.value); set.add(k) }
+        state[SET] = KEYS.filter((x) => set.has(x)); onChange()
+      })
+    }
+    sync(getState())
+  }
+  return { SET, D, T, P, KEYS, DS, DIST, EX, TERMS, used, why, on, text, rule, sync, bind }
 })()

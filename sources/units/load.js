@@ -17,13 +17,13 @@ import { GID, SOURCES } from '../../config/indicators.js'
 import { fetchCells } from '../climate/geoservice/lookup.js'
 import { ensureDatasetRecords, datasetGids } from '../datasets/records.js'
 
-const AREA = 'gcu_loc_climate_area', ELEV = 'gcu_loc_climate_elevation'   // the climate over the unit's polygon and the elevation at its reference point (terms of 2026-11-24)
+const AREA = 'gcu_loc_climate_area', AMIN = 'gcu_loc_climate_area_min', AMAX = 'gcu_loc_climate_area_max', ELEV = 'gcu_loc_climate_elevation'   // the climate over the unit's polygon and the elevation at its reference point (terms of 2026-11-24)
 const dryRun = process.argv.includes('--dry-run')
 const onMissing = process.argv.includes('--on-missing') ? process.argv[process.argv.indexOf('--on-missing') + 1] : 'drop'
 const lines = (f) => existsSync(f) ? readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []
 try {
   const creds = loadCredentials(); const { db, collections } = connect(creds, { requireLoadTarget: !dryRun })
-  const wanted = occurrenceGids(); const extra = ['gcu_id_number', 'gcu_loc_coordinates-restriction', 'gcu_loc_climate', 'gcu_loc_climate_distance', AREA, ELEV]
+  const wanted = occurrenceGids(); const extra = ['gcu_id_number', 'gcu_loc_coordinates-restriction', 'gcu_loc_climate', 'gcu_loc_climate_distance', AREA, AMIN, AMAX, ELEV]
   const { dictionary, missing: allMissing } = await loadDictionary([...wanted, ...extra, ...datasetGids()], creds)
   const missing = allMissing.filter((g) => wanted.includes(g) || extra.includes(g))
   if (missing.length) { console.log(`  not in the dictionary: ${missing.join(', ')}`); if (onMissing === 'fail') throw new Error('missing terms') }
@@ -37,6 +37,7 @@ try {
   // the area's climate: sources/units/area_cells.py (EU-Trees4F, raster units like the point samples) and sources/units/area.js (1 km grids, already gids)
   const areaH = new Map(lines('work/climate-units-area-eutrees4f.jsonl').map((l) => [l.key, l.values]))
   const areaF = new Map(lines('work/climate-units-area-eutrees4f-future.jsonl').map((l) => [l.key, l.values]))
+  const areaR = new Map(lines('work/climate-units-area-eutrees4f-range.jsonl').map((l) => [l.key, l]))
   const area = new Map(lines('work/units-area.jsonl').map((l) => [l.key, l]))
   const keyOf = new Map(units.map((u) => [u.key, containingCellKey(u.lon, u.lat)]))
   const cellKeys = [...new Set(keyOf.values())]
@@ -89,10 +90,18 @@ try {
     const at4 = Object.keys(ap).length ? climateBlock('eutrees4f', { periods: ap }) : null
     const areaDoc = { ...(at4 ? { eutrees4f: at4 } : {}), ...(a?.properties ?? {}) }
     if (Object.keys(areaDoc).length) doc[AREA] = areaDoc
+    // minimum and maximum of each indicator over the area (terms of 2026-11-25): the unit's climate variability
+    const r = areaR.get(u.key)
+    for (const [gid, h, f, grid] of [[AMIN, r?.min, r?.min_future, a?.min], [AMAX, r?.max, r?.max_future, a?.max]]) {
+      const pp = {}; if (h && Object.keys(h).length) pp[SOURCES.eutrees4f.period] = h; Object.assign(pp, f ?? {})
+      const t = Object.keys(pp).length ? climateBlock('eutrees4f', { periods: pp }) : null
+      const d = { ...(t ? { eutrees4f: t } : {}), ...(grid ?? {}) }
+      if (Object.keys(d).length) doc[gid] = d
+    }
     if (typeof a?.elevation?.point === 'number') doc[ELEV] = Math.round(a.elevation.point)
     doc.std_dataset_ids = [...ids]
-    dropGids(doc, missing, [AREA])
-    const { errors } = checkDocument(doc, dictionary, report, { skip, leafGids, containers: [AREA] })
+    dropGids(doc, missing, [AREA, AMIN, AMAX])
+    const { errors } = checkDocument(doc, dictionary, report, { skip, leafGids, containers: [AREA, AMIN, AMAX] })
     if (errors.length) { invalid++; if (invalid <= 3) console.log('  invalid:', doc._key, JSON.stringify(errors[0])) }
     docs.push(doc)
   }

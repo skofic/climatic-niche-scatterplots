@@ -34,7 +34,7 @@
   </span>
   <span class="group"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
     <label><span data-term="gcu_loc_coordinates-restriction_level"></span> <select data-key="gcu_loc_coordinates-restriction_level"></select></label>
-    <label><span data-term="ui_layout_label_flag-climate"></span> &gt; <select data-key="gcu_loc_climate_flag_temperature"><option>0.25</option><option>0.5</option><option>1</option><option>2</option></select> °C / <select data-key="gcu_loc_climate_flag_precipitation"><option>2</option><option>5</option><option>10</option><option>20</option></select> %</label>
+    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label>
   </span>
   <!-- the selected units (option-click on either pane): the count, which units both panes draw, clear -->
   <span class="group"><span class="cap" data-term="ui_layout_units_selection"></span><span id="selCount">0</span>
@@ -56,19 +56,19 @@
 <script src="service.js"></script>
 <script>
 const $ = (id) => document.getElementById(id), $K = (k) => document.querySelector(`[data-key="${k}"]`)
-const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', level: 'gcu_loc_coordinates-restriction_level', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', mode: 'ui_layout_mode', placement: 'ui_layout_map_placement', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode', sel: 'ui_layout_map_selection' }
-const SHARED = [K.species, K.country, K.unit, K.level, K.flagT, K.flagP, K.selection, K.unitsMode]   // what the panes receive
+const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', level: 'gcu_loc_coordinates-restriction_level', flagSet: 'gcu_loc_climate_flag', flagD: 'gcu_loc_climate_flag_distance', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', mode: 'ui_layout_mode', placement: 'ui_layout_map_placement', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode', sel: 'ui_layout_map_selection' }
+const SHARED = [K.species, K.country, K.unit, K.level, K.flagSet, K.flagD, K.flagT, K.flagP, K.selection, K.unitsMode]   // what the panes receive
 const E = (root, ...lids) => lids.map((l) => `${root}_${l}`)
 const OPT = { [K.level]: E('gcu_loc_coordinates-restriction', 'public', 'value', 'manage'), [K.mode]: E('ui_layout_mode', 'auto', 'side', 'stack'), [K.placement]: E('ui_layout_map_placement', 'page', 'tab', 'window'), [K.unitsMode]: E('ui_layout_units', 'all', 'only', 'hide') }
-const FLAG = Flag.KEY, DS = Flag.DS   // the climate flag is read on the scatterplot's climate source, which that pane reports
+const DS = Flag.DS   // the flag's climate criteria are read on the scatterplot's climate source, which that pane reports
 const last = Dict.last
 let state = {}, cat, ix = [], popup = null
 // the map pane is the iframe, or the detached tab / window while that is open
 const mapW = () => (popup && !popup.closed ? popup : $('map').contentWindow), scatterW = () => $('scatter').contentWindow
-const REMEMBER = [K.flagT, K.flagP, K.unitsMode]
+const REMEMBER = [K.flagSet, K.flagD, K.flagT, K.flagP, K.unitsMode]
 function send(keys = SHARED) { const msg = { type: 'state' }; for (const k of keys) msg[k] = state[k] ?? null; mapW().postMessage({ ...msg, [DS]: state[DS] ?? null }, '*'); scatterW().postMessage(msg, '*'); Store.save('host', state, REMEMBER) }
 const match = (u, c, s) => (!c || u.gcu_id_number.startsWith(c)) && (!s || u.species_list.includes(s))
-const flag = (u) => Flag.on(u[FLAG], state)
+const flag = (u) => Flag.on(u, state)
 const flagsOf = (s) => cat.species.find((x) => x.species === s)
 /** the filter as chips: the species, the country and the unit, each removable; nothing chosen = the hint on the search box */
 function refill() {
@@ -137,7 +137,7 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   if (lv.includes(max)) { OPT[K.level] = lv.slice(0, lv.indexOf(max) + 1); if (!OPT[K.level].includes(state[K.level])) state[K.level] = max; if (max === lv[0]) document.querySelector(`[data-key="${K.level}"]`).closest('label').style.display = 'none' }
   ix = await Svc.unitsIndex(state[K.level])
   await Dict.load([...Object.values(K), ...Object.values(OPT).flat(), ...c.countries.map((x) => x[K.country]), 'ui_layout', 'ui_layout_scatterplot', 'ui_layout_scatterplot_label_map-selection', 'gcu_loc_coordinates-restriction', 'ui_layout_label_species', 'ui_layout_label_country', 'ui_layout_label_unit', 'ui_layout_label_clear', 'ui_layout_label_restricted', 'ui_layout_label_flagged', 'ui_layout_map_label_presence'])
-  await Dict.labels(); Info.init()
+  await Dict.load(Flag.TERMS); await Dict.labels(); Flag.bind(() => state, () => { refill(); send() }); Info.init()
   for (const el of document.querySelectorAll('[data-key]')) {
     const k = el.dataset.key
     el.dataset.fieldDef = Dict.def(k)

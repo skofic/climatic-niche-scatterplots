@@ -57,6 +57,7 @@ for period in ['1991-2020', '2021-2050', '2051-2080']:
             with rasterio.open(f'{FDIR}/{var}_ensemble_mean_{rcp}_{period}.tif') as ds:
                 arr = ds.read(1).astype('float64'); arr[arr == ds.nodata] = np.nan
                 future[(period, rcp, ind)] = (ds.transform, arr)
+range_out = open('work/climate-units-area-eutrees4f-range.jsonl', 'w')   # minimum and maximum over the polygon's cells: {key, min, max, min_future, max_future}
 hist_out = open('work/climate-units-area-eutrees4f.jsonl', 'w'); fut_out = open('work/climate-units-area-eutrees4f-future.jsonl', 'w')
 cells_out = open('work/units-area-cells.jsonl', 'w'); t4_out = open('work/units-area-eutrees4f.jsonl', 'w')
 n = 0
@@ -82,7 +83,11 @@ for line in open('work/units-geometry.jsonl'):
     t4_out.write(json.dumps({'key': u['key'], 'point': pt, 'area': area, 'n': len(c5), 'same_cell': len(c5) == 1 and c5[0][:2] == (pc, pr)}) + '\n')
     # the same area means in the shape of the point samplers (sources/climate/eutrees4f/sample*.py), for the loader
     hist_out.write(json.dumps({'key': u['key'], 'values': {k: v for k, v in area.items() if v is not None}}) + '\n')
-    fut = {}
+    lo, hi = {}, {}
+    for ind in layers:
+        vals = [at(i, j, ind) for i, j, w in c5]; vals = [float(v) for v in vals if not math.isnan(v)]
+        if vals: lo[ind] = round(min(vals), 4); hi[ind] = round(max(vals), 4)
+    fut, flo, fhi = {}, {}, {}
     for (period, rcp, ind), (ftf, farr) in future.items():
         fh, fw = farr.shape; ck = (ftf.c, ftf.f, ftf.a, fh)
         if ck not in fcover: fcover[ck] = cover(g, ftf.c, ftf.f - fh * ftf.a, ftf.a)
@@ -90,7 +95,11 @@ for line in open('work/units-geometry.jsonl'):
         for i, j, w in fcover[ck]:
             r = fh - 1 - j
             if 0 <= r < fh and 0 <= i < fw and not math.isnan(farr[r, i]): vals.append((farr[r, i], w))
-        if vals: fut.setdefault(period, {}).setdefault(rcp, {})[ind] = round(sum(v * w for v, w in vals) / sum(w for _, w in vals), 4)
+        if vals:
+            fut.setdefault(period, {}).setdefault(rcp, {})[ind] = round(sum(v * w for v, w in vals) / sum(w for _, w in vals), 4)
+            flo.setdefault(period, {}).setdefault(rcp, {})[ind] = round(float(min(v for v, _ in vals)), 4)
+            fhi.setdefault(period, {}).setdefault(rcp, {})[ind] = round(float(max(v for v, _ in vals)), 4)
     fut_out.write(json.dumps({'key': u['key'], 'values': fut}) + '\n')
+    range_out.write(json.dumps({'key': u['key'], 'min': lo, 'max': hi, 'min_future': flo, 'max_future': fhi}) + '\n')
     n += 1
 print(f'{n} units', file=sys.stderr)

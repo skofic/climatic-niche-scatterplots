@@ -53,7 +53,7 @@
     <span id="searchInfo" class="hints"></span>
   </span>
   <span class="group"><span class="cap" data-term="ui_layout_label_coordinates-privacy"></span>
-    <label><span data-term="ui_layout_label_flag-climate"></span> &gt; <select data-key="gcu_loc_climate_flag_temperature"><option>0.25</option><option>0.5</option><option>1</option><option>2</option></select> °C / <select data-key="gcu_loc_climate_flag_precipitation"><option>2</option><option>5</option><option>10</option><option>20</option></select> %</label>
+    <label><span data-term="ui_layout_label_flag-climate"></span></label><label><span data-term="gcu_loc_climate_flag_distance"></span> &gt; <select data-flag="gcu_loc_climate_flag_distance"></select></label><label><span data-term="gcu_loc_climate_flag_temperature"></span> &gt; <select data-flag="gcu_loc_climate_flag_temperature"></select></label><label><span data-term="gcu_loc_climate_flag_precipitation"></span> &gt; <select data-flag="gcu_loc_climate_flag_precipitation"></select></label>
   </span>
 </div>
 <div id="map"><div id="tip" class="tip"></div></div>
@@ -87,22 +87,22 @@ const choro = new ol.layer.Vector({ source: new ol.source.Vector(), style: new o
 // the user's drawn point or area, sent to the scatterplot pane (see linked.html)
 const drawn = new ol.layer.Vector({ source: new ol.source.Vector(), style: new ol.style.Style({ stroke: new ol.style.Stroke({ color: '#00897b', width: 2.5 }), fill: new ol.style.Fill({ color: 'rgba(0,137,123,.15)' }), image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: '#00897b' }), stroke: new ol.style.Stroke({ color: '#fff', width: 1.5 }) }) }) })
 const unitStyle = new ol.style.Style({ stroke: new ol.style.Stroke({ color: '#e06a00', width: 2 }), fill: new ol.style.Fill({ color: 'rgba(224,106,0,.25)' }), image: new ol.style.Circle({ radius: 4, fill: new ol.style.Fill({ color: '#e06a00' }), stroke: new ol.style.Stroke({ color: '#fff', width: 1 }) }) })
-// flagged = the climate of the unit's area differs from the climate at its reference point beyond the thresholds (Flag, panes.js): dark-red dashed outline
+// flagged = the reference point lies far from the polygon, or its climate lies outside the range found over the unit's area (Flag, panes.js): dark-red dashed outline
 const flagStyle = new ol.style.Style({ stroke: new ol.style.Stroke({ color: '#b71c1c', width: 2.5, lineDash: [6, 4] }), fill: new ol.style.Fill({ color: 'rgba(183,28,28,.2)' }), image: new ol.style.Circle({ radius: 5, fill: new ol.style.Fill({ color: '#b71c1c' }), stroke: new ol.style.Stroke({ color: '#fff', width: 1 }) }) })
 const hidden = new ol.style.Style({})
 
 // ---- the pane state, keyed by dictionary gids (ui_layout_state)
-const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', level: 'gcu_loc_coordinates-restriction_level', base: 'ui_layout_map_layer_base', draw: 'ui_layout_map_draw-mode', sel: 'ui_layout_map_selection', period: 'env_climate_period', scenario: 'env_climate_scenario', variant: 'ui_layout_scatterplot_view_classes_variant', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode' }
+const K = { species: 'species', country: 'gcu_id_country', unit: 'gcu_id_number', flagSet: 'gcu_loc_climate_flag', flagD: 'gcu_loc_climate_flag_distance', flagT: 'gcu_loc_climate_flag_temperature', flagP: 'gcu_loc_climate_flag_precipitation', level: 'gcu_loc_coordinates-restriction_level', base: 'ui_layout_map_layer_base', draw: 'ui_layout_map_draw-mode', sel: 'ui_layout_map_selection', period: 'env_climate_period', scenario: 'env_climate_scenario', variant: 'ui_layout_scatterplot_view_classes_variant', selection: 'ui_layout_units_selection', unitsMode: 'ui_layout_units_mode' }
 const LAYER = { rpp: 'ui_layout_map_layer_rpp', mhs: 'ui_layout_map_layer_mhs', t4cur: 'ui_layout_map_layer_t4-current', t4fut: 'ui_layout_map_layer_t4-future', choro: 'ui_layout_map_layer_chorology', units: 'ui_layout_map_layer_units' }
 const E = (root, ...lids) => lids.map((l) => `${root}_${l}`)
 const OPT = { [K.base]: E('ui_layout_map_layer_base', 'none', 'boundary', 'hillshade', 'gray', 'osm', 'topo'), [K.draw]: E('ui_layout_map_draw-mode', 'none', 'point', 'box', 'polygon'), [K.variant]: E('ui_layout_scatterplot_view_classes_variant', 'potential', 'dispersal') }
 const run = { layers: '' }   // what the "i" mark reports: the species' map layers
 const LBL = { selection: 'ui_layout_units_selection', restricted: 'ui_layout_label_restricted', flagged: 'ui_layout_label_flagged', unit: 'ui_layout_label_unit', neverOnMap: 'ui_layout_map_label_never-on-map', click: 'ui_layout_map_label_click', presence: 'ui_layout_map_label_presence', suitability: 'ui_layout_map_label_suitability', t4cur: 'ui_layout_map_label_t4-current', t4fut: 'ui_layout_map_label_t4-future', chorology: 'ui_layout_map_label_chorology', units: 'ui_layout_map_label_units', mapSel: 'ui_layout_scatterplot_label_map-selection' }
-const DIST = 'gcu_loc_climate_distance', FLAG = Flag.KEY   // the distance is stated in the hover window; the flag is read from the climate
+const DIST = 'gcu_loc_climate_distance'
 const FUT = { '1991-2020': 'fut2035', '2021-2050': 'fut2065', '2051-2080': 'fut2095' }   // climate period → the EU-Trees4F map it drives (30-year lag)
 let state = {}, cat, ix = []
 const last = Dict.last
-const flagged = (f) => Flag.on(f.get(FLAG), state)
+const flagged = (f) => Flag.on((k) => f.get(k), state)
 // selected (option-click, here or in the scatterplot): the same black ring as in the scatterplot
 const selRing = new ol.style.Style({ image: new ol.style.Circle({ radius: 7.5, stroke: new ol.style.Stroke({ color: '#111', width: 2 }) }) })
 const selected = (id) => (state[K.selection] ?? []).includes(id)
@@ -126,7 +126,7 @@ const basemaps = {
 }
 const HOME = { center: ol.proj.fromLonLat([10, 50], laea), zoom: 4 }
 // what this pane remembers between visits (browser storage): the base map, the layers and their opacities, the EU-Trees4F future shown, the flag thresholds, the units mode — and the view (most users are country managers; Milko, 2026-11-12)
-const REMEMBER = [K.base, ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), K.period, K.scenario, K.variant, K.flagT, K.flagP, K.unitsMode]
+const REMEMBER = [K.base, ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), K.period, K.scenario, K.variant, K.flagSet, K.flagD, K.flagT, K.flagP, K.unitsMode]
 const remember = () => { const v = map.getView(); Store.save('map', state, REMEMBER, { view: { center: v.getCenter(), zoom: v.getZoom() } }) }
 const map = new ol.Map({ target: 'map', layers: [...Object.values(basemaps), ...Object.values(layers), picked, drawn],
   view: new ol.View({ projection: laea, ...HOME }) })
@@ -180,8 +180,8 @@ function refill() {
   const flagsOf = (s) => cat.species.find((x) => x.species === s)
   const ss = $K(K.species); ss.innerHTML = ''; ss.add(new Option('—', '', false, !species)); for (const [v, n] of count(ix.filter((u) => match(u, country, '')), (u) => u.species_list)) ss.add(new Option(`${v}${flagsOf(v)?.atlas_rpp ? ' ●' : ''} (${n})`, v, false, v === species))
   const us = $K(K.unit); us.innerHTML = '<option value="">—</option>'
-  const flag = (u) => Flag.on(u[FLAG], state)
-  for (const u of sel) us.add(new Option(u.gcu_id_number + (u['gcu_loc_coordinates-restriction'] ? ` (${T(LBL.restricted)})` : '') + (flag(u) ? ` ⚠ ${Flag.text(u[FLAG], state)}` : ''), u.gcu_id_number, false, u.gcu_id_number === state[K.unit]))
+  const flag = (u) => Flag.on(u, state)
+  for (const u of sel) us.add(new Option(u.gcu_id_number + (u['gcu_loc_coordinates-restriction'] ? ` (${T(LBL.restricted)})` : '') + (flag(u) ? ` ⚠ ${Flag.text(u, state)}` : ''), u.gcu_id_number, false, u.gcu_id_number === state[K.unit]))
   for (const el of [cs, ss, us]) Dict.hover(el)
   const nf = sel.filter(flag).length; $('searchInfo').textContent = `${sel.length} ${T(LBL.unit).toLowerCase()}s · ${sel.filter((u) => u['gcu_loc_coordinates-restriction']).length} ${T(LBL.restricted)}${nf ? ` · ⚠ ${nf}` : ''} · ● ${T(LBL.presence)}`; $('searchInfo').title = `⚠ = ${T(LBL.flagged)} (${Flag.rule(state)})`
   const ids = new Set(sel.map((u) => u.gcu_id_number))
@@ -194,8 +194,8 @@ function refill() {
 function updateInfo(sel) {
   const T = Dict.title, u = state[K.unit] && ix.find((x) => x.gcu_id_number === state[K.unit])
   const lines = [run.layers, state[K.country] && `${T('ui_layout_label_country')}: ${T(state[K.country])}`,
-    u && `${T(LBL.unit)}: ${u.gcu_id_number}${u['gcu_loc_coordinates-restriction'] ? ` (${T(LBL.restricted)})` : ''}${Flag.on(u[FLAG], state) ? ` ⚠ ${Flag.text(u[FLAG], state)}` : ''}`,
-    `${sel.length} ${T(LBL.unit).toLowerCase()}s, ${sel.filter((x) => x['gcu_loc_coordinates-restriction']).length} ${T(LBL.restricted)}, ${sel.filter((x) => Flag.on(x[FLAG], state)).length} ${T(LBL.flagged)}, ${(state[K.selection] ?? []).length} ${T(LBL.selection).toLowerCase()}`]
+    u && `${T(LBL.unit)}: ${u.gcu_id_number}${u['gcu_loc_coordinates-restriction'] ? ` (${T(LBL.restricted)})` : ''}${Flag.on(u, state) ? ` ⚠ ${Flag.text(u, state)}` : ''}`,
+    `${sel.length} ${T(LBL.unit).toLowerCase()}s, ${sel.filter((x) => x['gcu_loc_coordinates-restriction']).length} ${T(LBL.restricted)}, ${sel.filter((x) => Flag.on(x, state)).length} ${T(LBL.flagged)}, ${(state[K.selection] ?? []).length} ${T(LBL.selection).toLowerCase()}`]
   Pop.set($('status'), lines.filter(Boolean).join(' · '), state[K.species] ?? T('ui_layout_label_search'))
   remember()
 }
@@ -230,7 +230,7 @@ function bindControls() {
     el.addEventListener('change', (e) => { state[k] = e.target.value; showSpeciesLayers(state[K.species]) })
   }
 }
-function syncControls() { for (const el of document.querySelectorAll('[data-key]')) { const v = state[el.dataset.key]; if (el.type === 'checkbox') el.checked = !!v; else if (v != null) el.value = v }; $('t4scenario').value = state[K.scenario]; $('t4period').value = state[K.period] }
+function syncControls() { Flag.sync(state); for (const el of document.querySelectorAll('[data-key]')) { const v = state[el.dataset.key]; if (el.type === 'checkbox') el.checked = !!v; else if (v != null) el.value = v }; $('t4scenario').value = state[K.scenario]; $('t4period').value = state[K.period] }
 // ---- map → scatterplot: the drawn geometry (WGS84 GeoJSON) goes to the parent page as ui_layout_map_selection
 const post = (partial) => { const msg = { type: 'state', ...partial }; if (window.parent !== window) window.parent.postMessage(msg, '*'); if (window.opener) window.opener.postMessage(msg, '*') }
 const wgs = new ol.format.GeoJSON({ dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3035' })
@@ -251,7 +251,7 @@ function setDraw() {   // changing the mode keeps what was drawn (draw, switch o
 const unitAt = (pixel) => map.forEachFeatureAtPixel(pixel, (f) => f, { layerFilter: (l) => l === units || l === picked, hitTolerance: 4 })
 const ELEV = 'geo_shape_elevation'   // the unit polygon's mean elevation (with gcu_loc_elevation-min / -max) and, at a clicked point, the WorldClim elevation layer — both from the service (2026-11-12)
 const elevation = (get) => get(ELEV) == null ? '' : `${Dict.title(ELEV)}: ${Math.round(get(ELEV))} ${Dict.unit(ELEV)}` + (get('gcu_loc_elevation-min') != null ? ` (${get('gcu_loc_elevation-min')}–${get('gcu_loc_elevation-max')})` : '')
-const unitHtml = (f) => { const T = Dict.title, id = f.get('gcu_id_number'), el = elevation((k) => f.get(k)); return `<b>${id}</b>${f.get('gcu_loc_coordinates-restriction') ? ` (${T(LBL.restricted)})` : ''}${flagged(f) ? `<br><span style="color:#b71c1c">⚠ ${T(LBL.flagged)}: ${Flag.text(f.get(FLAG), state)}</span>` : ''}${f.get(DIST) > 0 ? `<br>${T(DIST)}: ${f.get(DIST).toFixed(1)} ${Dict.unit(DIST)}` : ''}${el ? `<br>${el}` : ''}<br>${f.get('species_list').join(', ')}<br>${T('ISO_3166_1_' + id.slice(0, 3))}` }
+const unitHtml = (f) => { const T = Dict.title, id = f.get('gcu_id_number'), el = elevation((k) => f.get(k)); return `<b>${id}</b>${f.get('gcu_loc_coordinates-restriction') ? ` (${T(LBL.restricted)})` : ''}${flagged(f) ? `<br><span style="color:#b71c1c">⚠ ${T(LBL.flagged)}: ${Flag.text((k) => f.get(k), state)}</span>` : ''}${f.get(DIST) > 0 ? `<br>${T(DIST)}: ${f.get(DIST).toFixed(1)} ${Dict.unit(DIST)}` : ''}${el ? `<br>${el}` : ''}<br>${f.get('species_list').join(', ')}<br>${T('ISO_3166_1_' + id.slice(0, 3))}` }
 
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state[K.unit]) { state[K.unit] = null; picked.getSource().clear(); syncControls(); refill(); post({ [K.unit]: null }) } })
 map.on('pointermove', (e) => {
@@ -319,8 +319,8 @@ Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   if (q.get('embedded')) document.body.classList.add('embedded')
   if (q.get('settings')) document.body.classList.add('settings')   // the drawing settings open at load (dev and presets)
   ix = await Svc.unitsIndex(state[K.level])
-  await Dict.load([...Object.values(K), ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), ...Object.values(OPT).flat(), ...Object.values(LBL), 'ui_layout_map_label_hints', ...c.countries.map((x) => x[K.country]), ...c.climates.filter((k) => k.src === 'eutrees4f').flatMap((k) => [k[K.period], k[K.scenario]]), 'ui_layout_map', 'ui_layout_map_layer', 'ui_layout_label_unit', 'ui_layout_label_flagged', 'ui_layout_label_clear', 'ui_layout_label_species', 'ui_layout_label_country', 'ui_layout_label_reset', 'latitude', 'longitude', DIST, ELEV, Flag.T, Flag.P])
-  await Dict.labels(); Pop.shortLabels(); bindControls(); syncControls(); applyLayers(); Info.init()
+  await Dict.load([...Object.values(K), ...Object.values(LAYER), ...Object.values(LAYER).map((l) => l + '_opacity'), ...Object.values(OPT).flat(), ...Object.values(LBL), 'ui_layout_map_label_hints', ...c.countries.map((x) => x[K.country]), ...c.climates.filter((k) => k.src === 'eutrees4f').flatMap((k) => [k[K.period], k[K.scenario]]), 'ui_layout_map', 'ui_layout_map_layer', 'ui_layout_label_unit', 'ui_layout_label_flagged', 'ui_layout_label_clear', 'ui_layout_label_species', 'ui_layout_label_country', 'ui_layout_label_reset', 'latitude', 'longitude', DIST, ELEV, ...Flag.TERMS])
+  await Dict.labels(); Pop.shortLabels(); bindControls(); Flag.bind(() => state, () => { refill(); units.changed(); remember() }); syncControls(); applyLayers(); Info.init()
   await showSpeciesLayers(state[K.species])
   $('drawClear').addEventListener('click', () => { drawn.getSource().clear(); state[K.sel] = null; post({ [K.sel]: null }) })
   for (const el of document.querySelectorAll('.legend .tog')) { el.addEventListener('click', () => { if (el.classList.contains('na')) return; state[el.dataset.toggle] = !state[el.dataset.toggle]; syncControls(); applyLayers() }) }   // without a species its layers do not exist: their chips are not switches, and keep their setting for when one is chosen

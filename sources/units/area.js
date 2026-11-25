@@ -5,7 +5,8 @@
 // Cells without a value (sea, outside the grid) are left out of the mean. Also the elevation at the reference point's
 // cell and over the area (WorldClim elevation layer).
 // READS ONLY: nothing is written to the database. Output: work/units-area.jsonl
-//   { key, n, properties: { worldclim: {...}, chelsa: {...} }, elevation: { point, area } }
+//   { key, n, properties: { worldclim: {...}, chelsa: {...} }, min: {...}, max: {...}, elevation: { point, area } }
+// `properties` holds the means; `min` and `max` the lowest and highest value of each indicator over the polygon's cells.
 // Usage: node sources/units/area.js     (after area_cells.py; sources/units/load.js reads the output)
 import { readFileSync, writeFileSync } from 'node:fs'
 import { connect, loadCredentials, explain } from '../../lib/db.js'
@@ -29,7 +30,9 @@ try {
     for (const [i, j, wt] of u.cells) { const v = get(keys.get(`${i},${j}`)); if (typeof v === 'number' && Number.isFinite(v)) { s += v * wt; w += wt } }
     return w > 0 ? Number((s / w).toFixed(4)) : null
   }
-  const out = new Map(units.map((u) => [u.key, { key: u.key, n: u.cells.length, properties: {} }]))
+  // the lowest and highest value over the polygon's cells, whatever the share of the polygon in each
+  const range = (u, get) => { let mn = Infinity, mx = -Infinity; for (const [i, j] of u.cells) { const v = get(keys.get(`${i},${j}`)); if (typeof v === 'number' && Number.isFinite(v)) { if (v < mn) mn = v; if (v > mx) mx = v } } return mn === Infinity ? null : [mn, mx] }
+  const out = new Map(units.map((u) => [u.key, { key: u.key, n: u.cells.length, properties: {}, min: {}, max: {} }]))
   for (const src of ['worldclim', 'chelsa']) {
     const S = SOURCES[src]
     for (const period of [S.period, ...(S.future?.periods ?? [])]) {
@@ -37,11 +40,12 @@ try {
       const inds = new Set(); for (const v of got.values()) for (const [k, x] of Object.entries(v)) if (typeof x === 'number') inds.add(k)
       let filled = 0
       for (const u of units) {
-        const values = {}
-        for (const ind of inds) { const m = mean(u, (k) => got.get(k)?.[ind]); if (m != null) values[ind] = m }
+        const values = {}, lo = {}, hi = {}
+        for (const ind of inds) { const m = mean(u, (k) => got.get(k)?.[ind]); if (m != null) { values[ind] = m; const r = range(u, (k) => got.get(k)?.[ind]); lo[ind] = r[0]; hi[ind] = r[1] } }
         if (!Object.keys(values).length) continue
-        const g = toGids(src, period === S.period ? values : nestFuture(src, period, values))
-        if (Object.keys(g).length) { (out.get(u.key).properties[src] ??= {})[period] = g; filled++ }
+        const o = out.get(u.key); let any = false
+        for (const [block, v] of [[o.properties, values], [o.min, lo], [o.max, hi]]) { const g = toGids(src, period === S.period ? v : nestFuture(src, period, v)); if (Object.keys(g).length) { (block[src] ??= {})[period] = g; any = true } }
+        if (any) filled++
       }
       console.log(`  ${src} ${period}: ${got.size} cells, ${inds.size} indicators, ${filled} units`)
     }
