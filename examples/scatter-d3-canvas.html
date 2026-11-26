@@ -441,7 +441,7 @@ const ON = {   // what a change of a key does beyond storing it (default: redraw
   [K.view]: refresh, [K.variant]: refresh, [K.period]: refresh,
   [K.scenario]: () => { const c = cur() ?? climates.find((k) => k[K.dataset] === state[K.dataset][0] && k[K.scenario] === state[K.scenario]); setClimate(c); refresh() },
   // the pair: choosing an X suggests its paired Y once (decided 2026-11-09); a custom pair stays possible by changing Y afterwards
-  [K.X]: () => { const pair = cat.axes.pairs.find((p) => p[K.X] === state[K.X]); if (pair && holds(pair[K.Y])) state[K.Y] = pair[K.Y]; refresh() },   // the paired Y, when the source holds it [K.Y]: refresh,
+  [K.X]: () => { const pair = cat.axes.pairs.find((p) => p[K.X] === state[K.X]); if (pair && holds(pair[K.Y])) state[K.Y] = pair[K.Y]; refresh() }, [K.Y]: refresh,   // X suggests its paired Y, when the source holds it
   [K.species]: () => { state[K.country] = null; state[K.unit] = null; refresh() }, [K.country]: () => { state[K.unit] = null; refill(); draw() }, [K.unit]: () => chooseUnit(state[K.unit]),
   [K.flagT]: () => { refill(); draw() }, [K.flagP]: () => { refill(); draw() }, [K.level]: refresh, [K.unitsMode]: draw,
   [K.cursor]: () => { if (!state[K.cursor]) { octx.clearRect(0, 0, W, H); $('cursorInfo').textContent = '' } },
