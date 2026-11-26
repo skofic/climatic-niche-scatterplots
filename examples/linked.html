@@ -125,7 +125,7 @@ function place() {
 }
 // the panes get the same language, dictionary and service as this page
 const q = new URLSearchParams(location.search)
-const paneUrl = (page, extra = '') => `${page}?embedded=1${['lang', 'dict', 'api'].filter((k) => q.get(k)).map((k) => `&${k}=${encodeURIComponent(q.get(k))}`).join('')}${extra}`
+const paneUrl = (page, extra = '') => `${page}?embedded=1${['lang', 'dict', 'api'].filter((k) => q.get(k)).map((k) => `&${k}=${encodeURIComponent(q.get(k))}`).join('')}${q.has('debug') ? '&debug' : ''}${extra}`
 Promise.all([Svc.catalogue(), Dict.defaults()]).then(async ([c, defaults]) => {
   cat = c
   // nothing chosen at first: the search box is the first thing to use (Milko, 2026-11-12); the flag thresholds and the units mode remembered in this browser

@@ -97,7 +97,7 @@ window.Info = (() => {
     return out
   }
   /** one term's part of a card: the head (its title, linked to the term page), then what it says */
-  const part = (g, only) => `<div class="term"><div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a></div>${body(g, only)}</div>`
+  const part = (g, only) => `<div class="term"><div class="head"><a ${TERM} href="${href(g)}">${esc(Dict.title(g))} ↗</a>${q.has('debug') ? ` <code class="gid">${esc(g)}</code>` : ''}</div>${body(g, only)}</div>`
   /** the same for an object that is not a term but follows the dictionary (a dataset record: `_info` texts already in
    *  the pane's language + `_references`), as the service's catalogue returns it */
   function recordBody(info = {}, only) {
@@ -188,7 +188,7 @@ window.Info = (() => {
       done()
     }, 60) })
   }
-  return { init, refresh, records, SITE }
+  return { init, refresh, records, SITE, href }
 })()
 
 /* Wait: the activity monitor. service.js reports its pending requests here; the page's body gets the "busy" class while
@@ -268,4 +268,79 @@ window.Flag = (() => {
     sync(getState())
   }
   return { SET, D, T, P, KEYS, DS, DIST, EX, LINES, TERMS, lines, used, why, on, text, rule, sync, bind }
+})()
+
+/* Debug: the terms behind the interface, for whoever edits their texts (Milko, 2026-11-26). Started with `?debug` in the
+   address, never remembered. Every element labelled by a term gets a small mark (◆): a click lists the terms behind it
+   — the label's, the control's key and each of its options — each with its global identifier (a click copies it) and
+   a link that opens the term in the Metadata Store interface. What a mark cannot reach (hover windows, status texts,
+   texts drawn on the plot) is found through the "terms" button: every term this page has read, filtered by the words
+   seen on screen. In the joint page each pane has its own button, for its own terms. */
+window.Debug = (() => {
+  const ON = new URLSearchParams(location.search).has('debug')
+  if (!ON) return { ON }
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const known = (g) => !!(g && Dict.terms.get(g))
+  let panel = null, list = null, filter = null, head = null, shown = null   // shown: null = every term of the page, else [{ group, gids }]
+  function copy(text, el) {
+    const done = () => { el.classList.add('copied'); setTimeout(() => el.classList.remove('copied'), 900) }
+    const old = () => { const t = Object.assign(document.body.appendChild(document.createElement('textarea')), { value: text }); t.select(); try { document.execCommand('copy') } catch {} t.remove(); done() }
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, old); else old()
+  }
+  const row = (g) => `<div class="row"><a target="dictionary" href="${Info.href(g)}" title="${esc(Dict.def(g))}">${esc(Dict.title(g))} ↗</a><code data-gid="${esc(g)}" title="copy">${esc(g)}</code></div>`
+  function draw() {
+    const words = filter.value.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    const match = (g) => { if (!words.length) return true; const t = `${Dict.title(g)} ${g} ${Dict.def(g)} ${Dict.plain(Dict.desc(g))}`.toLowerCase(); return words.every((w) => t.includes(w)) }
+    const groups = shown || [{ group: '', gids: [...Dict.terms.keys()].filter(known).sort((a, b) => Dict.title(a).localeCompare(Dict.title(b))) }]
+    let n = 0
+    list.innerHTML = groups.map(({ group, gids }) => { const rows = gids.filter(match); n += rows.length; return rows.length ? (group ? `<div class="grp">${esc(group)}</div>` : '') + rows.map(row).join('') : '' }).join('') || '<div class="grp">—</div>'
+    head.textContent = shown ? `${n} · this element` : `${n} · every term of this page`
+  }
+  function open(groups) {
+    if (!panel) {
+      panel = Object.assign(document.body.appendChild(document.createElement('div')), { className: 'dbgpanel' })
+      panel.innerHTML = '<div class="bar"><b>◆</b> <span class="n"></span> <button data-act="all">all</button> <button data-act="close">×</button></div><input type="search" placeholder="filter: words of a title, text or identifier"><div class="rows"></div>'
+      head = panel.querySelector('.n'); filter = panel.querySelector('input'); list = panel.querySelector('.rows')
+      filter.addEventListener('input', draw)
+      panel.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const c = e.target.closest('code[data-gid]'); if (c) return copy(c.dataset.gid, c)
+        const a = e.target.closest('button[data-act]'); if (!a) return
+        if (a.dataset.act === 'close') panel.classList.remove('open'); else { shown = null; draw(); filter.focus() }
+      })
+    }
+    shown = groups || null; if (groups) filter.value = ''
+    panel.classList.add('open'); draw(); if (!groups) filter.focus()
+  }
+  /** the terms behind a labelled element: its own, then the control it labels (key and options) */
+  function behind(e) {
+    const own = [e.dataset.term, ...(e.dataset.info || '').split(' ')].filter(Boolean), groups = [{ group: 'label', gids: [...new Set(own)].filter(known) }]
+    const box = e.classList.contains('cap') ? e.parentElement : (e.closest('label') || e.closest('[data-toggle]'))
+    const ctls = box ? [...box.querySelectorAll(e.classList.contains('cap') ? ':scope > select, :scope > input' : 'select, input')] : []
+    for (const c of ctls) {
+      const key = c.dataset.key || c.dataset.flag
+      if (known(key) && !own.includes(key)) groups.push({ group: 'control', gids: [key] })
+      if (c.tagName === 'SELECT') { const os = [...new Set([...c.options].map((o) => o.value))].filter(known); if (os.length && os.length <= 40) groups.push({ group: `options${known(key) ? ' of ' + Dict.title(key) : ''}`, gids: os }) }
+    }
+    return groups.filter((g) => g.gids.length)
+  }
+  function marks() {
+    for (const e of document.querySelectorAll('[data-term], [data-info]')) {
+      if (e.closest('.dbgpanel, .pop')) continue
+      if (e._dbg && e._dbg.isConnected) { const h = !e.getClientRects().length; if (e._dbg.hidden !== h) e._dbg.hidden = h; continue }   // no mark for an element that is not shown
+      if (e.dataset.term && e.parentElement && e.parentElement.closest('[data-info]')) continue   // a label inside a switch: the switch carries the mark
+      const m = e._dbg = Object.assign(document.createElement('span'), { className: 'dbg', textContent: '◆', title: 'terms of this element' })
+      m.addEventListener('click', (ev) => { ev.stopPropagation(); ev.preventDefault(); open(behind(e)) })
+      m.hidden = !e.getClientRects().length; e.after(m)   // beside the element, never inside: a label's text is rewritten by the dictionary helper
+    }
+  }
+  function start() {
+    const b = Object.assign(document.body.appendChild(document.createElement('button')), { className: 'dbgopen' + (document.querySelector('iframe') ? ' host' : ''), textContent: '◆ terms', title: 'every term this page has read' })
+    b.addEventListener('click', (e) => { e.stopPropagation(); if (panel && panel.classList.contains('open') && !shown) panel.classList.remove('open'); else open() })
+    let wait = null
+    new MutationObserver((ms) => { if (ms.every((m) => m.target.nodeType === 1 && m.target.closest('.dbg, .dbgpanel, .pop'))) return; clearTimeout(wait); wait = setTimeout(marks, 300) }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden', 'open'] })
+    marks()
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start()
+  return { ON, open }
 })()
